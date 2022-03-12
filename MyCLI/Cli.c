@@ -10,6 +10,25 @@
  * COPYRIGHT:
  *    Copyright 2010 Paul Hutchinson
  *
+ *    Permission is hereby granted, free of charge, to any person obtaining
+ *    a copy of this software and associated documentation files
+ *    (the "Software"), to deal in the Software without restriction,
+ *    including without limitation the rights to use, copy, modify,
+ *    merge, publish, distribute, sublicense, and/or sell copies of the
+ *    Software, and to permit persons to whom the Software is furnished
+ *    to do so, subject to the following conditions:
+ *
+ *    The above copyright notice and this permission notice shall be included
+ *    in all copies or substantial portions of the Software.
+ *
+ *    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ *    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ *    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ *    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ *    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ *    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ *    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  * CREATED BY:
  *    phutchinson (14 Oct 2010)
  *
@@ -69,10 +88,6 @@ static void CL_EraseCurrentLine(void);
  *
  * SEE ALSO:
  *    
- *******************************************************************************
- * REVISION HISTORY:
- *    phutchinson (14 Oct 2010)
- *       Created
  ******************************************************************************/
 void CLI_InitPrompt(void)
 {
@@ -100,10 +115,6 @@ void CLI_InitPrompt(void)
  *
  * SEE ALSO:
  *    
- *******************************************************************************
- * REVISION HISTORY:
- *    phutchinson (13 Oct 2010)
- *       Created
  ******************************************************************************/
 char *CLI_GetLine(void)
 {
@@ -487,10 +498,6 @@ char *CLI_GetLine(void)
  *
  * SEE ALSO:
  *    CL_GetLine()
- *******************************************************************************
- * REVISION HISTORY:
- *    phutchinson (13 Oct 2010)
- *       Created
  ******************************************************************************/
 static void CL_EchoEndOfPromptLine(unsigned int len)
 {
@@ -531,10 +538,6 @@ static void CL_EchoEndOfPromptLine(unsigned int len)
  *
  * SEE ALSO:
  *    CL_GetLine(), CL_EraseCurrentLine()
- *******************************************************************************
- * REVISION HISTORY:
- *    phutchinson (13 Oct 2010)
- *       Created
  ******************************************************************************/
 void CLI_ResetInputBuffer(void)
 {
@@ -564,10 +567,6 @@ void CLI_ResetInputBuffer(void)
  *
  * SEE ALSO:
  *    CLI_ResetInputBuffer()
- *******************************************************************************
- * REVISION HISTORY:
- *    phutchinson (14 Oct 2010)
- *       Created
  ******************************************************************************/
 static void CL_EraseCurrentLine(void)
 {
@@ -611,10 +610,6 @@ static void CL_EraseCurrentLine(void)
  *
  * SEE ALSO:
  *    CLI_Init()
- *******************************************************************************
- * REVISION HISTORY:
- *    phutchinson (13 Oct 2010)
- *       Created
  ******************************************************************************/
 void CLI_SetLineBuffer(char *LineBuff,int MaxSize)
 {
@@ -645,10 +640,6 @@ void CLI_SetLineBuffer(char *LineBuff,int MaxSize)
  *
  * SEE ALSO:
  *    
- *******************************************************************************
- * REVISION HISTORY:
- *    phutchinson (14 Oct 2010)
- *       Created
  ******************************************************************************/
 void CLI_SetHistoryBuffer(char *HistoryBuff,int MaxSize)
 {
@@ -679,10 +670,6 @@ void CLI_SetHistoryBuffer(char *HistoryBuff,int MaxSize)
  *
  * SEE ALSO:
  *    
- *******************************************************************************
- * REVISION HISTORY:
- *    phutchinson (14 Oct 2010)
- *       Created
  ******************************************************************************/
 void CLI_SetPasswordMode(bool OnOff)
 {
@@ -707,10 +694,6 @@ void CLI_SetPasswordMode(bool OnOff)
  *
  * SEE ALSO:
  *    
- *******************************************************************************
- * REVISION HISTORY:
- *    phutchinson (14 Oct 2010)
- *       Created
  ******************************************************************************/
 void CLI_ResetHistory(void)
 {
