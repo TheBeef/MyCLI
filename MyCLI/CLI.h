@@ -1,15 +1,14 @@
 /*******************************************************************************
- * FILENAME: CLI_Commands.h
+ * FILENAME: CLI.h
  * 
  * PROJECT:
- *    CLI
+ *    MyCLI
  *
  * FILE DESCRIPTION:
- *    This file is the .h file for the CLI_Commands.c file.  It does .h file
- *    stuff.
+ *    This file has the API for the MyCLI library.
  *
  * COPYRIGHT:
- *    Copyright 2012 Paul Hutchinson
+ *    Copyright 2010 Paul Hutchinson
  *
  *    Permission is hereby granted, free of charge, to any person obtaining
  *    a copy of this software and associated documentation files
@@ -31,21 +30,25 @@
  *    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * HISTORY:
- *    Paul Hutchinson (18 Jun 2012)
+ *    Paul Hutchinson (12 Mar 2022)
  *       Created
  *
  *******************************************************************************/
-#ifndef __CLI_COMMANDS_H_
-#define __CLI_COMMANDS_H_
+#ifndef __CLI_H_
+#define __CLI_H_
 
 /***  HEADER FILES TO INCLUDE          ***/
-#include "CLI.h"
+#include "CLI_Options.h"    // User provided, has the options for the CLI lib
+
+#include <stdbool.h>
 
 /***  DEFINES                          ***/
 
 /***  MACROS                           ***/
 
 /***  TYPE DEFINITIONS                 ***/
+struct CLIHandle;   // Private struct
+
 struct CLICommand
 {
     const char *Cmd;
@@ -60,10 +63,15 @@ extern int g_CLICmdsCount;                  // The number of commands
 extern const struct CLICommand g_CLICmds[]; // The commands we are using
 
 /***  EXTERNAL FUNCTION PROTOTYPES     ***/
-void CLI_Init(void);
-void CLI_SetPromptStr(const char *Prompt);
-void CLI_PollCmdPrompt(struct CLIHandle *Handle);
+struct CLIHandle *CLI_GetHandle(void);
+void CLI_InitPrompt(struct CLIHandle *Handle);
+char *CLI_GetLine(struct CLIHandle *Handle);
+void CLI_SetLineBuffer(struct CLIHandle *Handle,char *LineBuff,int MaxSize);
+void CLI_SetHistoryBuffer(struct CLIHandle *Handle,char *HistoryBuff,
+        int MaxSize);
+void CLI_SetPasswordMode(struct CLIHandle *Handle,bool OnOff);
+void CLI_DrawPrompt(struct CLIHandle *Handle);
+void CLI_RunCmdPrompt(struct CLIHandle *Handle);
 void CLI_DisplayHelp(void);
-void CLI_DrawPrompt(void);
 
-#endif   /* end of "#ifndef __CLI_COMMANDS_H_" */
+#endif

@@ -38,6 +38,8 @@
 #define __CLI_HAL_H_
 
 /***  HEADER FILES TO INCLUDE          ***/
+#include <stdbool.h>
+#include <stdint.h>
 
 /***  DEFINES                          ***/
 
@@ -135,6 +137,10 @@ void HAL_CLI_PutChar(char c);
  *
  * RETURNS:
  *    The number of milli seconds that have gone by.
+ *
+ * NOTES:
+ *    If you do not support time you can have this function just return 0.
+ *    It only effects the ESC key handling.
  *
  * SEE ALSO:
  *    

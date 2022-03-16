@@ -1,6 +1,5 @@
-#include "Cli.h"
+#include "CLI.h"
 #include "CLI_HAL.h"
-#include "CLI_Commands.h"
 #include <stdlib.h>
 #include <string.h>
 #include <sys/select.h>
@@ -11,8 +10,6 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <stdbool.h>
-
-#define USECMDS 1
 
 struct termios orig_termios;
 
@@ -27,7 +24,6 @@ int quit=false;
 void quitfn(int argc,const char **argv);
 void helpfn(int argc,const char **argv);
 
-#ifdef USECMDS
 const struct CLICommand g_CLICmds[]=
 {
     {"quit","Quit the program",quitfn},
@@ -36,44 +32,27 @@ const struct CLICommand g_CLICmds[]=
 
 int g_CLICmdsCount=sizeof(g_CLICmds)/sizeof(struct CLICommand);
 
-#endif
-
 int main(void)
 {
     char *Line;
+    struct CLIHandle *Prompt;
 
     SetupIO();
 
-    CLI_SetLineBuffer(g_LineBuff,100);
-    CLI_SetHistoryBuffer(g_HistoryBuff,100);
-    CLI_InitPrompt();
+    Prompt=CLI_GetHandle();
+    if(Prompt==NULL)
+        printf("Failed to get prompt handle\n");
 
-#ifdef USECMDS
-    CLI_Init();
 
-    CLI_DrawPrompt();
+    CLI_InitPrompt(Prompt);
+    CLI_SetLineBuffer(Prompt,g_LineBuff,100);
+    CLI_SetHistoryBuffer(Prompt,g_HistoryBuff,100);
+
+    CLI_DrawPrompt(Prompt);
     while(!quit)
     {
-        CLI_PollCmdPrompt();
+        CLI_RunCmdPrompt(Prompt);
     }
-
-#else
-    for(;;)
-    {
-        Line=CLI_GetLine();
-        if(Line!=NULL)
-        {
-            printf("GOT:%s\r\n",Line);
-
-            /* We got a line, see if it's a command or login/password */
-            if(strcmp(Line,"quit")==0)
-                break;
-
-            /* We are done with the buffer, reset for the next input */
-            CLI_ResetInputBuffer();
-        }
-    }
-#endif
 
     ShutDownIO();
 

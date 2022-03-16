@@ -36,7 +36,7 @@
 
 /*** HEADER FILES TO INCLUDE  ***/
 #include "CLI_Commands.h"
-#include "Cli.h"
+#include "CLI.h"
 #include "CLI_HAL.h"
 #include <stdint.h>
 #include <stdbool.h>
@@ -108,10 +108,10 @@ void CLI_SetPromptStr(const char *Prompt)
  *    CLI_PollCmdPrompt
  *
  * SYNOPSIS:
- *    void CLI_PollCmdPrompt(void);
+ *    void CLI_PollCmdPrompt(struct CLIHandle *Handle);
  *
  * PARAMETERS:
- *    NONE
+ *    Handle [I] -- The handle to the prompt to work on
  *
  * FUNCTION:
  *    This function process keys from the user and figures out the command to
@@ -125,13 +125,13 @@ void CLI_SetPromptStr(const char *Prompt)
  * SEE ALSO:
  *    
  ******************************************************************************/
-void CLI_PollCmdPrompt(void)
+void CLI_PollCmdPrompt(struct CLIHandle *Handle)
 {
     char *Line; // The line we got from the input
     int cmd;    // The command index we are looking at
     int len;    // The len of the current command we are looking at
 
-    Line=CLI_GetLine();
+    Line=CLI_GetLine(Handle);
     if(Line!=NULL)
     {
         /* We got a line, scan the commands */
@@ -152,7 +152,7 @@ void CLI_PollCmdPrompt(void)
         CLI_DrawPrompt();
 
         /* We are done with the buffer, reset for the next input */
-        CLI_ResetInputBuffer();
+        CLI_ResetInputBuffer((struct CLIHandlePrv *)Handle);
     }
 }
 
@@ -209,7 +209,7 @@ static void CLI_RunCMD(char *Line,const struct CLICommand *Cmd)
     unsigned int r;         // Temp var (for loops)
     unsigned int len;       // The len of the input line
     uint16_t Argc;          // The number of args
-    char *Argv[MAX_ARGS];   // The argv's we are sending
+    char *Argv[CLI_MAX_ARGS];   // The argv's we are sending
 
     len=strlen(Line);
 
@@ -222,9 +222,9 @@ static void CLI_RunCMD(char *Line,const struct CLICommand *Cmd)
         {
             Line[r]=0;
             Argv[Argc++]=&Line[r+1];
-            if(Argc>MAX_ARGS)
+            if(Argc>CLI_MAX_ARGS)
             {
-                CLIPrintStr("CLI_RunCMD:MAX_ARGS to small.\r\n");
+                CLIPrintStr("CLI_RunCMD:CLI_MAX_ARGS to small.\r\n");
                 return;
             }
         }
