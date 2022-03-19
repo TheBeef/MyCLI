@@ -59,7 +59,7 @@ struct CLICommand
 /***  CLASS DEFINITIONS                ***/
 
 /***  GLOBAL VARIABLE DEFINITIONS      ***/
-extern int g_CLICmdsCount;                  // The number of commands
+extern unsigned int g_CLICmdsCount;         // The number of commands
 extern const struct CLICommand g_CLICmds[]; // The commands we are using
 
 /***  EXTERNAL FUNCTION PROTOTYPES     ***/
@@ -73,5 +73,6 @@ void CLI_SetPasswordMode(struct CLIHandle *Handle,bool OnOff);
 void CLI_DrawPrompt(struct CLIHandle *Handle);
 void CLI_RunCmdPrompt(struct CLIHandle *Handle);
 void CLI_DisplayHelp(void);
+bool CLI_RunLine(struct CLIHandle *Handle,char *Line);
 
 #endif

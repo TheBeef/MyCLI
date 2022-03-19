@@ -123,6 +123,8 @@ static struct CLIHandlePrv m_CLI_Prompts[CLI_MAX_PROMPTS];
  *    allocate function except it doesn't allocate memory and just takes
  *    from a pool.  When the pool is empty it return NULL.
  *
+ *    There is no way to free a prompt.
+ *
  * RETURNS:
  *    A handle to the prompt or NULL if there are no more available
  *
@@ -1010,32 +1012,67 @@ void CLI_RunCmdPrompt(struct CLIHandle *Handle)
 {
     struct CLIHandlePrv *CLI=(struct CLIHandlePrv *)Handle;
     char *Line; // The line we got from the input
-    int cmd;    // The command index we are looking at
-    int len;    // The len of the current command we are looking at
 
     Line=CLI_GetLine(Handle);
     if(Line!=NULL)
     {
-        /* We got a line, scan the commands */
-        for(cmd=0;cmd<g_CLICmdsCount;cmd++)
-        {
-            len=strlen(g_CLICmds[cmd].Cmd);
-            if(strncmp(Line,g_CLICmds[cmd].Cmd,len)==0 &&
-                    (Line[len]==0 || Line[len]==' '))
-            {
-                /* Found a command, run it */
-                CLI_RunCMD(Line,&g_CLICmds[cmd]);
-                break;
-            }
-        }
-        if(cmd==g_CLICmdsCount && *Line!=0)
+        if(!CLI_RunLine(Handle,Line))
             CLIPrintStr("Command not found.\r\n\r\n");
-
-        CLI_DrawPrompt(Handle);
 
         /* We are done with the buffer, reset for the next input */
         CLI_ResetInputBuffer(CLI);
+
+        CLI_DrawPrompt(Handle);
     }
+}
+
+/*******************************************************************************
+ * NAME:
+ *    CLI_RunLine
+ *
+ * SYNOPSIS:
+ *    bool CLI_RunLine(struct CLIHandle *Handle,char *Line);
+ *
+ * PARAMETERS:
+ *    Handle [I] -- The handle to the prompt to work on
+ *    Line [I] -- The raw line to process.  This will be overwritten.
+ *
+ * FUNCTION:
+ *    This function takes a raw line and runs it.
+ *
+ * RETURNS:
+ *    true -- Command was found.
+ *    false -- The command is unknown.
+ *
+ * SEE ALSO:
+ *    
+ ******************************************************************************/
+bool CLI_RunLine(struct CLIHandle *Handle,char *Line)
+{
+//    struct CLIHandlePrv *CLI=(struct CLIHandlePrv *)Handle;
+    unsigned int cmd;    // The command index we are looking at
+    int len;    // The len of the current command we are looking at
+
+    /* Empty lines do not make errors */
+    if(*Line==0)
+        return true;
+
+    /* We got a line, scan the commands */
+    for(cmd=0;cmd<g_CLICmdsCount;cmd++)
+    {
+        len=strlen(g_CLICmds[cmd].Cmd);
+        if(STRNCMP(Line,g_CLICmds[cmd].Cmd,len)==0 &&
+                (Line[len]==0 || Line[len]==' '))
+        {
+            /* Found a command, run it */
+            CLI_RunCMD(Line,&g_CLICmds[cmd]);
+            break;
+        }
+    }
+
+    if(cmd==g_CLICmdsCount)
+        return false;
+    return true;
 }
 
 /*******************************************************************************
@@ -1074,7 +1111,7 @@ static void CLIPrintStr(const char *Str)
  *    static void CLI_RunCMD(char *Line,const struct CLICommand *Cmd)
  *
  * PARAMETERS:
- *    Line [I] -- The line that starting this
+ *    Line [I] -- The line that starting this.  This will be overwritten.
  *    Cmd [I] -- The command to run.
  *
  * FUNCTION:

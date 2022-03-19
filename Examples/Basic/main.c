@@ -26,15 +26,14 @@ void helpfn(int argc,const char **argv);
 
 const struct CLICommand g_CLICmds[]=
 {
-    {"quit","Quit the program",quitfn},
-    {"help","Get help",helpfn}
+    {"Quit","Quit the program",quitfn},
+    {"Help","Get help",helpfn}
 };
 
-int g_CLICmdsCount=sizeof(g_CLICmds)/sizeof(struct CLICommand);
+unsigned int g_CLICmdsCount=sizeof(g_CLICmds)/sizeof(struct CLICommand);
 
 int main(void)
 {
-    char *Line;
     struct CLIHandle *Prompt;
 
     SetupIO();
@@ -42,7 +41,6 @@ int main(void)
     Prompt=CLI_GetHandle();
     if(Prompt==NULL)
         printf("Failed to get prompt handle\n");
-
 
     CLI_InitPrompt(Prompt);
     CLI_SetLineBuffer(Prompt,g_LineBuff,100);
