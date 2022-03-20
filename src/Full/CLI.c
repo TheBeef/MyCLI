@@ -1227,3 +1227,405 @@ void CLI_DrawPrompt(struct CLIHandle *Handle)
 
     CLIPrintStr(CLI->Prompt);
 }
+
+/*******************************************************************************
+ * NAME:
+ *    CLI_CmdHelpStart
+ *
+ * SYNOPSIS:
+ *    void CLI_CmdHelpStart(void);
+ *
+ * PARAMETERS:
+ *    NONE
+ *
+ * FUNCTION:
+ *    This function starts a help block.  The help block is used for auto
+ *    complete and displaying help.  This must be called before you call
+ *    any other help functions (except CLI_ShowCmdHelp())
+ *
+ * RETURNS:
+ *    NONE
+ *
+ * EXAMPLE:
+ *    The ALL CAPS is the what is effected by this function.
+ *
+ *    if(argc==0)
+ *    {
+ *      CLI_CmdHelp_Start();
+ *
+ *      CLI_CmdHelp_Arg("Disk","What disk to work on");
+ *      CLI_CmdHelp_OptionString(0,"df0","Floppy disk 1");
+ *      CLI_CmdHelp_OptionString(0,"df1","Floppy disk 2");
+ *      CLI_CmdHelp_OptionString(0,"df0","Hard drive 1");
+ *
+ *      CLI_CmdHelp_Arg("Function","Preform disk functions");
+ *      // Read fn
+ *      CLI_CmdHelp_OptionString(1,"Read","Read from the disk");
+ *      CLI_CmdHelp_SubArg("Offset","The offset into the disk to read");
+ *      CLI_CmdHelp_SubArg("Bytes","The number of bytes to read");
+ *      // Write fn
+ *      CLI_CmdHelp_OptionString(1,"Write","Write to the disk");
+ *      CLI_CmdHelp_SubArg("Offset","The number of bytes to write");
+ *      CLI_CmdHelp_SubArg("Bytes","The number of bytes to write");
+ *      // Format fn
+ *      CLI_CmdHelp_OptionString(1,"Format","Format the disk");
+ *
+ *      CLI_HelpEnd(false);
+ *      return;
+ *    }
+ *
+ *    Outputs:
+ *      USAGE:
+ *          Cmd [Disk] [Function]
+ *
+ *      WHERE:
+ *          Disk -- What disk to work on
+ *              df0 -- Floppy disk 1
+ *              df1 -- Floppy disk 2
+ *              df0 -- Hard drive 1
+ *          Function -- Preform disk functions
+ *                  Read -- Read from the disk
+ *                          Offset -- The offset into the disk to read
+ *                          Bytes -- The number of bytes to read
+ *                  Write -- Write to the disk
+ *                          Offset -- The number of bytes to write
+ *                          Bytes -- The number of bytes to write
+ *                  Format -- Format the disk
+ *
+ * SEE ALSO:
+ *    CLI_CmdHelp_Arg(), CLI_CmdHelp_SubArg(), CLI_CmdHelp_OptionString()
+ *    CLI_CmdHelp_DotDotDot(), CLI_CmdHelp_End(), CLI_ShowCmdHelp()
+ ******************************************************************************/
+void CLI_CmdHelp_Start(void)
+{
+}
+
+/*******************************************************************************
+ * NAME:
+ *    CLI_CmdHelp_Arg
+ *
+ * SYNOPSIS:
+ *    void CLI_CmdHelp_Arg(const char *Label,const char *Desc);
+ *
+ * PARAMETERS:
+ *    Label [I] -- What is the name of this arg
+ *    Desc [I] -- The description of this arg
+ *
+ * FUNCTION:
+ *    This function describes an argument for the current command.
+ *
+ * RETURNS:
+ *    NONE
+ *
+ * EXAMPLE:
+ *    The ALL CAPS is the what is effected by this function.
+ *
+ *    if(argc==0)
+ *    {
+ *      CLI_CmdHelp_Start();
+ *
+ *      CLI_CmdHelp_Arg("Disk","What disk to work on");
+ *      CLI_CmdHelp_OptionString(0,"df0","Floppy disk 1");
+ *      CLI_CmdHelp_OptionString(0,"df1","Floppy disk 2");
+ *      CLI_CmdHelp_OptionString(0,"df0","Hard drive 1");
+ *
+ *      CLI_CmdHelp_Arg("Function","Preform disk functions");
+ *      // Read fn
+ *      CLI_CmdHelp_OptionString(1,"Read","Read from the disk");
+ *      CLI_CmdHelp_SubArg("Offset","The offset into the disk to read");
+ *      CLI_CmdHelp_SubArg("Bytes","The number of bytes to read");
+ *      // Write fn
+ *      CLI_CmdHelp_OptionString(1,"Write","Write to the disk");
+ *      CLI_CmdHelp_SubArg("Offset","The number of bytes to write");
+ *      CLI_CmdHelp_SubArg("Bytes","The number of bytes to write");
+ *      // Format fn
+ *      CLI_CmdHelp_OptionString(1,"Format","Format the disk");
+ *
+ *      CLI_HelpEnd(false);
+ *      return;
+ *    }
+ *
+ *    Outputs:
+ *      USAGE:
+ *          Cmd [Disk] [Function]
+ *
+ *      WHERE:
+ *          DISK -- WHAT DISK TO WORK ON
+ *              df0 -- Floppy disk 1
+ *              df1 -- Floppy disk 2
+ *              df0 -- Hard drive 1
+ *          FUNCTION -- PREFORM DISK FUNCTIONS
+ *                  Read -- Read from the disk
+ *                          Offset -- The offset into the disk to read
+ *                          Bytes -- The number of bytes to read
+ *                  Write -- Write to the disk
+ *                          Offset -- The number of bytes to write
+ *                          Bytes -- The number of bytes to write
+ *                  Format -- Format the disk
+ * SEE ALSO:
+ *    
+ ******************************************************************************/
+void CLI_CmdHelp_Arg(const char *Label,const char *Desc)
+{
+}
+
+/*******************************************************************************
+ * NAME:
+ *    CLI_CmdHelp_SubArg
+ *
+ * SYNOPSIS:
+ *    void CLI_CmdHelp_SubArg(const char *Label,const char *Desc);
+ *
+ * PARAMETERS:
+ *    Label [I] -- What is the name of this arg
+ *    Desc [I] -- The description of this arg
+ *
+ * FUNCTION:
+ *    This function describes a sub argument to the last arg that was output.
+ *    
+ *    Sub Arguments are where the after the command takes the previous argument
+ *    the meaning of following arguments change (arguments have different
+ *    meaning depending on the arguments you send it).
+ *
+ *    For example the test command can take 2 different arg 1's:
+ *          test Repeat 'A' 10
+ *      OR
+ *          test Print Version
+ *
+ *    In this case 'A' and 10 are SubArg's to "Repeat" and "Version" is a
+ *    sub argument to "Print"
+ *
+ * RETURNS:
+ *    NONE
+ *
+ * EXAMPLE:
+ *    The ALL CAPS is the what is effected by this function.
+ *
+ *    if(argc==0)
+ *    {
+ *      CLI_CmdHelp_Start();
+ *
+ *      CLI_CmdHelp_Arg("Disk","What disk to work on");
+ *      CLI_CmdHelp_OptionString(0,"df0","Floppy disk 1");
+ *      CLI_CmdHelp_OptionString(0,"df1","Floppy disk 2");
+ *      CLI_CmdHelp_OptionString(0,"df0","Hard drive 1");
+ *
+ *      CLI_CmdHelp_Arg("Function","Preform disk functions");
+ *      // Read fn
+ *      CLI_CmdHelp_OptionString(1,"Read","Read from the disk");
+ *      CLI_CmdHelp_SubArg("Offset","The offset into the disk to read");
+ *      CLI_CmdHelp_SubArg("Bytes","The number of bytes to read");
+ *      // Write fn
+ *      CLI_CmdHelp_OptionString(1,"Write","Write to the disk");
+ *      CLI_CmdHelp_SubArg("Offset","The number of bytes to write");
+ *      CLI_CmdHelp_SubArg("Bytes","The number of bytes to write");
+ *      // Format fn
+ *      CLI_CmdHelp_OptionString(1,"Format","Format the disk");
+ *
+ *      CLI_HelpEnd(false);
+ *      return;
+ *    }
+ *
+ *    Outputs:
+ *      USAGE:
+ *          Cmd [Disk] [Function]
+ *
+ *      WHERE:
+ *          Disk -- What disk to work on
+ *              df0 -- Floppy disk 1
+ *              df1 -- Floppy disk 2
+ *              df0 -- Hard drive 1
+ *          Function -- Preform disk functions
+ *                  Read -- Read from the disk
+ *                          OFFSET -- THE OFFSET INTO THE DISK TO READ
+ *                          BYTES -- THE NUMBER OF BYTES TO READ
+ *                  Write -- Write to the disk
+ *                          OFFSET -- THE NUMBER OF BYTES TO WRITE
+ *                          BYTES -- THE NUMBER OF BYTES TO WRITE
+ *                  Format -- Format the disk
+ *
+ * SEE ALSO:
+ *    
+ ******************************************************************************/
+void CLI_CmdHelp_SubArg(const char *Label,const char *Desc)
+{
+}
+
+/*******************************************************************************
+ * NAME:
+ *    CLI_CmdHelp_OptionString
+ *
+ * SYNOPSIS:
+ *    void CLI_CmdHelp_OptionString(int Level,const char *Option,
+ *              const char *Desc);
+ *
+ * PARAMETERS:
+ *    Level [I] -- What level does this option applies to. (This starts at
+ *                 0 for the first arg (argv[1]) and so forth.
+ *    Option [I] -- The option the user can input.  This is normally a string
+ *                  the user can type out.
+ *    Desc [I] -- The description for what this option does.
+ *
+ * FUNCTION:
+ *    This function adds a value the user can input for an arguemnt.
+ *
+ *    For example if you had a "Print" argument that output different things
+ *    depending on the argument after it you can use this to list the values
+ *    the user can input.
+ *          test Print Version
+ *          test Print Status
+ *          test Print NetworkStatus
+ *      You use this function to add Version, Status, and NetworkStatus after
+ *      the "Print" arg.
+ *
+ * RETURNS:
+ *    NONE
+ *
+ * EXAMPLE:
+ *    The ALL CAPS is the what is effected by this function.
+ *
+ *    if(argc==0)
+ *    {
+ *      CLI_CmdHelp_Start();
+ *
+ *      CLI_CmdHelp_Arg("Disk","What disk to work on");
+ *      CLI_CmdHelp_OptionString(0,"df0","Floppy disk 1");
+ *      CLI_CmdHelp_OptionString(0,"df1","Floppy disk 2");
+ *      CLI_CmdHelp_OptionString(0,"df0","Hard drive 1");
+ *
+ *      CLI_CmdHelp_Arg("Function","Preform disk functions");
+ *      // Read fn
+ *      CLI_CmdHelp_OptionString(1,"Read","Read from the disk");
+ *      CLI_CmdHelp_SubArg("Offset","The offset into the disk to read");
+ *      CLI_CmdHelp_SubArg("Bytes","The number of bytes to read");
+ *      // Write fn
+ *      CLI_CmdHelp_OptionString(1,"Write","Write to the disk");
+ *      CLI_CmdHelp_SubArg("Offset","The number of bytes to write");
+ *      CLI_CmdHelp_SubArg("Bytes","The number of bytes to write");
+ *      // Format fn
+ *      CLI_CmdHelp_OptionString(1,"Format","Format the disk");
+ *
+ *      CLI_HelpEnd(false);
+ *      return;
+ *    }
+ *
+ *    Outputs:
+ *      USAGE:
+ *          Cmd [Disk] [Function]
+ *
+ *      WHERE:
+ *          Disk -- What disk to work on
+ *              DF0 -- FLOPPY DISK 1
+ *              DF1 -- FLOPPY DISK 2
+ *              DF0 -- HARD DRIVE 1
+ *          Function -- Preform disk functions
+ *                  READ -- READ FROM THE DISK
+ *                          Offset -- The offset into the disk to read
+ *                          Bytes -- The number of bytes to read
+ *                  WRITE -- WRITE TO THE DISK
+ *                          Offset -- The number of bytes to write
+ *                          Bytes -- The number of bytes to write
+ *                  FORMAT -- FORMAT THE DISK
+ *
+ * SEE ALSO:
+ *    
+ ******************************************************************************/
+void CLI_CmdHelp_OptionString(int Level,const char *Option,const char *Desc)
+{
+}
+
+/*******************************************************************************
+ * NAME:
+ *    CLI_CmdHelp_DotDotDot
+ *
+ * SYNOPSIS:
+ *    void CLI_CmdHelp_DotDotDot(void);
+ *
+ * PARAMETERS:
+ *    NONE
+ *
+ * FUNCTION:
+ *    This function outputs a ... at the end of the command.  With some commands
+ *    you may want to let the user input an unlimited list of args this
+ *    lets the user know they can put as many extra args as they want.
+ *
+ *    For example "echo" takes a number of args.
+ *
+ * RETURNS:
+ *    NONE
+ *
+ * EXAMPLE:
+ *    The ALL CAPS is the what is effected by this function.
+ *
+ *    CLI_CmdHelp_Start();
+ *
+ *    CLI_CmdHelp_Arg("Bytes","Bytes to write to device");
+ *    CLI_CmdHelp_OptionString(0,"write","Write bytes");
+ *    CLI_CmdHelp_DotDotDot();
+ *
+ *    CLI_HelpEnd();
+ *
+ *    Outputs:
+ *      USAGE:
+ *          Write2Dev [Bytes] ...
+ *
+ *      WHERE:
+ *          Bytes -- Bytes to write to device
+ *
+ * SEE ALSO:
+ *    
+ ******************************************************************************/
+void CLI_CmdHelp_DotDotDot(void)
+{
+}
+
+/*******************************************************************************
+ * NAME:
+ *    CLI_CmdHelp_End
+ *
+ * SYNOPSIS:
+ *    void CLI_CmdHelp_End(void);
+ *
+ * PARAMETERS:
+ *    NONE
+ *
+ * FUNCTION:
+ *    This function ends the help.  After this you should just return from
+ *    the command function.
+ *
+ * RETURNS:
+ *    NONE
+ *
+ * SEE ALSO:
+ *    
+ ******************************************************************************/
+void CLI_CmdHelp_End(void)
+{
+}
+
+/*******************************************************************************
+ * NAME:
+ *    CLI_ShowCmdHelp
+ *
+ * SYNOPSIS:
+ *    void CLI_ShowCmdHelp(void);
+ *
+ * PARAMETERS:
+ *    NONE
+ *
+ * FUNCTION:
+ *    This function displays the help for the current command being run.
+ *
+ *    The help system will call the command again with a argc==0 may times
+ *    to output different parts of the help.
+ *
+ * RETURNS:
+ *    NONE
+ *
+ * SEE ALSO:
+ *    
+ ******************************************************************************/
+void CLI_ShowCmdHelp(void)
+{
+}
+
