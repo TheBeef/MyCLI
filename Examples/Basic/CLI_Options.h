@@ -46,6 +46,11 @@
 #define STRNCMP                         strncasecmp
 #define STRLEN                          strlen
 
+/* If this is defined then the command help system (CLI_CmdHelpStart()) is
+   converted to blanks in the preprocessor.  This removes all the help
+   strings from your code without you needing to change your code. */
+//#define CLI_REMOVE_CMDHELP
+
 /***  MACROS                           ***/
 
 /***  TYPE DEFINITIONS                 ***/

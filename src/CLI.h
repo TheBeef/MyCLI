@@ -75,12 +75,21 @@ void CLI_RunCmdPrompt(struct CLIHandle *Handle);
 void CLI_DisplayHelp(void);
 bool CLI_RunLine(struct CLIHandle *Handle,char *Line);
 
-void CLI_CmdHelp_Start(void);
-void CLI_CmdHelp_Arg(const char *Label,const char *Desc);
-void CLI_CmdHelp_SubArg(const char *Label,const char *Desc);
-void CLI_CmdHelp_OptionString(int Level,const char *Option,const char *Desc);
-void CLI_CmdHelp_DotDotDot(void);
-void CLI_CmdHelp_End(void);
+#ifdef CLI_REMOVE_CMDHELP
+ #define CLI_CmdHelp_Start()
+ #define CLI_CmdHelp_Arg(a,b)
+ #define CLI_CmdHelp_SubArg(a,b)
+ #define CLI_CmdHelp_OptionString(a,b,c)
+ #define CLI_CmdHelp_DotDotDot()
+ #define CLI_CmdHelp_End()
+#else
+ void CLI_CmdHelp_Start(void);
+ void CLI_CmdHelp_Arg(const char *Label,const char *Desc);
+ void CLI_CmdHelp_SubArg(const char *Label,const char *Desc);
+ void CLI_CmdHelp_OptionString(int Level,const char *Option,const char *Desc);
+ void CLI_CmdHelp_DotDotDot(void);
+ void CLI_CmdHelp_End(void);
+#endif
 void CLI_ShowCmdHelp(void);
 
 #endif

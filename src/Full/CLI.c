@@ -115,7 +115,7 @@ static void CLI_ResetHistory(struct CLIHandlePrv *CLI);
 static void CLI_ResetInputBuffer(struct CLIHandlePrv *CLI);
 static void CLIPrintStr(const char *Str);
 static void CLI_RunCMD(struct CLIHandlePrv *CLI,char *Line,const struct CLICommand *Cmd);
-static void CLI_OutputHelpDesc(int Indent,const char *Label,const char *Desc);
+void CLI_OutputHelpDesc(int Indent,const char *Label,const char *Desc);
 
 /*** VARIABLE DEFINITIONS     ***/
 static uint8_t m_CLI_AllocatedPrompts;
@@ -1248,13 +1248,15 @@ void CLI_DrawPrompt(struct CLIHandle *Handle)
     CLIPrintStr(CLI->Prompt);
 }
 
-
+/* Don't really like #ifdef's but for it to work with the CLI_Options.h
+   we need to remove them */
+#ifndef CLI_REMOVE_CMDHELP
 /*******************************************************************************
  * NAME:
  *    CLI_OutputHelpDesc
  *
  * SYNOPSIS:
- *    static void CLI_OutputHelpDesc(int Indent,const char *Label,
+ *    void CLI_OutputHelpDesc(int Indent,const char *Label,
  *              const char *Desc);
  *
  * PARAMETERS:
@@ -1273,7 +1275,7 @@ void CLI_DrawPrompt(struct CLIHandle *Handle)
  * SEE ALSO:
  *    
  ******************************************************************************/
-static void CLI_OutputHelpDesc(int Indent,const char *Label,const char *Desc)
+void CLI_OutputHelpDesc(int Indent,const char *Label,const char *Desc)
 {
     unsigned int r;
     const char *pos;
@@ -1324,7 +1326,7 @@ static void CLI_OutputHelpDesc(int Indent,const char *Label,const char *Desc)
  *      CLI_CmdHelp_Arg("Disk","What disk to work on");
  *      CLI_CmdHelp_OptionString(0,"df0","Floppy disk 1");
  *      CLI_CmdHelp_OptionString(0,"df1","Floppy disk 2");
- *      CLI_CmdHelp_OptionString(0,"df0","Hard drive 1");
+ *      CLI_CmdHelp_OptionString(0,"dh0","Hard drive 1");
  *
  *      CLI_CmdHelp_Arg("Function","Preform disk functions");
  *      // Read fn
@@ -1350,7 +1352,7 @@ static void CLI_OutputHelpDesc(int Indent,const char *Label,const char *Desc)
  *          Disk -- What disk to work on
  *              df0 -- Floppy disk 1
  *              df1 -- Floppy disk 2
- *              df0 -- Hard drive 1
+ *              dh0 -- Hard drive 1
  *          Function -- Preform disk functions
  *                  Read -- Read from the disk
  *                          Offset -- The offset into the disk to read
@@ -1396,7 +1398,7 @@ void CLI_CmdHelp_Start(void)
  *      CLI_CmdHelp_Arg("Disk","What disk to work on");
  *      CLI_CmdHelp_OptionString(0,"df0","Floppy disk 1");
  *      CLI_CmdHelp_OptionString(0,"df1","Floppy disk 2");
- *      CLI_CmdHelp_OptionString(0,"df0","Hard drive 1");
+ *      CLI_CmdHelp_OptionString(0,"dh0","Hard drive 1");
  *
  *      CLI_CmdHelp_Arg("Function","Preform disk functions");
  *      // Read fn
@@ -1422,7 +1424,7 @@ void CLI_CmdHelp_Start(void)
  *          DISK -- WHAT DISK TO WORK ON
  *              df0 -- Floppy disk 1
  *              df1 -- Floppy disk 2
- *              df0 -- Hard drive 1
+ *              dh0 -- Hard drive 1
  *          FUNCTION -- PREFORM DISK FUNCTIONS
  *                  Read -- Read from the disk
  *                          Offset -- The offset into the disk to read
@@ -1492,7 +1494,7 @@ void CLI_CmdHelp_Arg(const char *Label,const char *Desc)
  *      CLI_CmdHelp_Arg("Disk","What disk to work on");
  *      CLI_CmdHelp_OptionString(0,"df0","Floppy disk 1");
  *      CLI_CmdHelp_OptionString(0,"df1","Floppy disk 2");
- *      CLI_CmdHelp_OptionString(0,"df0","Hard drive 1");
+ *      CLI_CmdHelp_OptionString(0,"dh0","Hard drive 1");
  *
  *      CLI_CmdHelp_Arg("Function","Preform disk functions");
  *      // Read fn
@@ -1518,7 +1520,7 @@ void CLI_CmdHelp_Arg(const char *Label,const char *Desc)
  *          Disk -- What disk to work on
  *              df0 -- Floppy disk 1
  *              df1 -- Floppy disk 2
- *              df0 -- Hard drive 1
+ *              dh0 -- Hard drive 1
  *          Function -- Preform disk functions
  *                  Read -- Read from the disk
  *                          OFFSET -- THE OFFSET INTO THE DISK TO READ
@@ -1586,7 +1588,7 @@ void CLI_CmdHelp_SubArg(const char *Label,const char *Desc)
  *      CLI_CmdHelp_Arg("Disk","What disk to work on");
  *      CLI_CmdHelp_OptionString(0,"df0","Floppy disk 1");
  *      CLI_CmdHelp_OptionString(0,"df1","Floppy disk 2");
- *      CLI_CmdHelp_OptionString(0,"df0","Hard drive 1");
+ *      CLI_CmdHelp_OptionString(0,"dh0","Hard drive 1");
  *
  *      CLI_CmdHelp_Arg("Function","Preform disk functions");
  *      // Read fn
@@ -1612,7 +1614,7 @@ void CLI_CmdHelp_SubArg(const char *Label,const char *Desc)
  *          Disk -- What disk to work on
  *              DF0 -- FLOPPY DISK 1
  *              DF1 -- FLOPPY DISK 2
- *              DF0 -- HARD DRIVE 1
+ *              DH0 -- HARD DRIVE 1
  *          Function -- Preform disk functions
  *                  READ -- READ FROM THE DISK
  *                          Offset -- The offset into the disk to read
@@ -1784,3 +1786,20 @@ void CLI_ShowCmdHelp(void)
     /* Call command again to have it output the details */
     g_CLI_ActiveCLI->RunningCmd->Exec(0,NULL);
 }
+#else
+/* Short version of CLI_ShowCmdHelp() */
+void CLI_ShowCmdHelp(void)
+{
+    if(g_CLI_ActiveCLI==NULL || g_CLI_ActiveCLI->RunningCmd==NULL ||
+            g_CLI_ActiveCLI->RunningCmd->Exec==NULL)
+    {
+        return;
+    }
+
+    CLIPrintStr(g_CLI_ActiveCLI->RunningCmd->Cmd);
+    CLIPrintStr(" -- ");
+    CLIPrintStr(g_CLI_ActiveCLI->RunningCmd->Help);
+    CLIPrintStr("\r\n");
+}
+
+#endif

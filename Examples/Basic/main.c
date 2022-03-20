@@ -129,6 +129,9 @@ void helpfn(int argc,const char **argv)
 
 void onefn(int argc,const char **argv)
 {
+    int bytes;
+    int offset;
+
     if(argc==0)
     {
         CLI_CmdHelp_Start();
@@ -136,7 +139,7 @@ void onefn(int argc,const char **argv)
         CLI_CmdHelp_Arg("Disk","What disk to work on");
         CLI_CmdHelp_OptionString(0,"df0","Floppy disk 1");
         CLI_CmdHelp_OptionString(0,"df1","Floppy disk 2");
-        CLI_CmdHelp_OptionString(0,"df0","Hard drive 1");
+        CLI_CmdHelp_OptionString(0,"dh0","Hard drive 1");
 
         CLI_CmdHelp_Arg("Function","Preform disk functions");
         // Read fn
@@ -154,6 +157,62 @@ void onefn(int argc,const char **argv)
         return;
     }
 
-    CLI_ShowCmdHelp();
+    if(argc<3)
+    {
+        CLI_ShowCmdHelp();
+        return;
+    }
+
+    if(strcasecmp(argv[1],"df0")==0)
+    {
+        printf("Floppy disk 1\r\n");
+    }
+    else if(strcasecmp(argv[1],"df1")==0)
+    {
+        printf("Floppy disk 1\r\n");
+    }
+    else if(strcasecmp(argv[1],"dh0")==0)
+    {
+        printf("Harddrive\n");
+    }
+    else
+    {
+        printf("unknown disk\r\n");
+        return;
+    }
+
+    if(strcasecmp(argv[2],"Read")==0)
+    {
+        if(argc<5)
+        {
+            printf("Missing args\r\n");
+            return;
+        }
+        bytes=atoi(argv[4]);
+        offset=atoi(argv[3]);
+
+        printf("Reading %d bytes at offset %d\r\n",bytes,offset);
+    }
+    else if(strcasecmp(argv[2],"Write")==0)
+    {
+        if(argc<5)
+        {
+            printf("Missing args\r\n");
+            return;
+        }
+        bytes=atoi(argv[4]);
+        offset=atoi(argv[3]);
+
+        printf("Writing %d bytes at offset %d\r\n",bytes,offset);
+    }
+    else if(strcasecmp(argv[2],"Format")==0)
+    {
+        printf("Formating...\r\n");
+    }
+    else
+    {
+        printf("unknown function\r\n");
+        return;
+    }
 }
 
