@@ -23,11 +23,13 @@ int quit=false;
 
 void quitfn(int argc,const char **argv);
 void helpfn(int argc,const char **argv);
+void onefn(int argc,const char **argv);
 
 const struct CLICommand g_CLICmds[]=
 {
     {"Quit","Quit the program",quitfn},
-    {"Help","Get help",helpfn}
+    {"Help","Get help",helpfn},
+    {"one","test help",onefn},
 };
 
 unsigned int g_CLICmdsCount=sizeof(g_CLICmds)/sizeof(struct CLICommand);
@@ -124,3 +126,34 @@ void helpfn(int argc,const char **argv)
 {
     CLI_DisplayHelp();
 }
+
+void onefn(int argc,const char **argv)
+{
+    if(argc==0)
+    {
+        CLI_CmdHelp_Start();
+
+        CLI_CmdHelp_Arg("Disk","What disk to work on");
+        CLI_CmdHelp_OptionString(0,"df0","Floppy disk 1");
+        CLI_CmdHelp_OptionString(0,"df1","Floppy disk 2");
+        CLI_CmdHelp_OptionString(0,"df0","Hard drive 1");
+
+        CLI_CmdHelp_Arg("Function","Preform disk functions");
+        // Read fn
+        CLI_CmdHelp_OptionString(1,"Read","Read from the disk");
+        CLI_CmdHelp_SubArg("Offset","The offset into the disk to read");
+        CLI_CmdHelp_SubArg("Bytes","The number of bytes to read");
+        // Write fn
+        CLI_CmdHelp_OptionString(1,"Write","Write to the disk");
+        CLI_CmdHelp_SubArg("Offset","The number of bytes to write");
+        CLI_CmdHelp_SubArg("Bytes","The number of bytes to write");
+        // Format fn
+        CLI_CmdHelp_OptionString(1,"Format","Format the disk");
+
+        CLI_CmdHelp_End();
+        return;
+    }
+
+    CLI_ShowCmdHelp();
+}
+

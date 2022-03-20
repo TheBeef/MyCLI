@@ -44,6 +44,7 @@
 #define CLI_MAX_PROMPTS                 1               // The number of command prompt we can have
 #define CLI_MAX_ARGS                    10              // The max number of argv's pointers (allocated on the stack)
 #define STRNCMP                         strncasecmp
+#define STRLEN                          strlen
 
 /***  MACROS                           ***/
 

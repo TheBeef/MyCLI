@@ -75,4 +75,12 @@ void CLI_RunCmdPrompt(struct CLIHandle *Handle);
 void CLI_DisplayHelp(void);
 bool CLI_RunLine(struct CLIHandle *Handle,char *Line);
 
+void CLI_CmdHelp_Start(void);
+void CLI_CmdHelp_Arg(const char *Label,const char *Desc);
+void CLI_CmdHelp_SubArg(const char *Label,const char *Desc);
+void CLI_CmdHelp_OptionString(int Level,const char *Option,const char *Desc);
+void CLI_CmdHelp_DotDotDot(void);
+void CLI_CmdHelp_End(void);
+void CLI_ShowCmdHelp(void);
+
 #endif

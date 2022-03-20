@@ -45,6 +45,7 @@
 #include <stdbool.h>
 
 /*** DEFINES                  ***/
+#define HELP_INDENT                                     4
 
 /*** MACROS                   ***/
 
@@ -80,6 +81,13 @@ typedef enum
     e_CLITelnetMAX
 } e_CLITelnetType;
 
+typedef enum
+{
+    e_CLI_HelpState_Usage=0,
+    e_CLI_HelpState_Details,
+    e_CLI_HelpStateMAX
+} e_CLI_HelpStateType;
+
 struct CLIHandlePrv
 {
     char *LineBuff;                 // The line editing buffer
@@ -94,6 +102,10 @@ struct CLIHandlePrv
     uint8_t ESCPos;                 // The pos in the ANSI escape seq we have gotten
     uint32_t ESCStart;              // The time that the ESC key was pressed
     const char *Prompt;             // The command prompt string
+    const struct CLICommand *RunningCmd;    // The command we are currently running (used by the help system)
+    unsigned int ArgsOutput;        // How many args have to output so far (used for indenting)
+    e_CLI_HelpStateType HelpState;  // What is the help system currently doing
+    bool FirstOption;               // Is this the first option we are outputing
 };
 
 /*** FUNCTION PROTOTYPES      ***/
@@ -102,11 +114,13 @@ static void CLI_EraseCurrentLine(struct CLIHandlePrv *CLI);
 static void CLI_ResetHistory(struct CLIHandlePrv *CLI);
 static void CLI_ResetInputBuffer(struct CLIHandlePrv *CLI);
 static void CLIPrintStr(const char *Str);
-static void CLI_RunCMD(char *Line,const struct CLICommand *Cmd);
+static void CLI_RunCMD(struct CLIHandlePrv *CLI,char *Line,const struct CLICommand *Cmd);
+static void CLI_OutputHelpDesc(int Indent,const char *Label,const char *Desc);
 
 /*** VARIABLE DEFINITIONS     ***/
 static uint8_t m_CLI_AllocatedPrompts;
 static struct CLIHandlePrv m_CLI_Prompts[CLI_MAX_PROMPTS];
+static struct CLIHandlePrv *g_CLI_ActiveCLI;
 
 /*******************************************************************************
  * NAME:
@@ -1049,7 +1063,7 @@ void CLI_RunCmdPrompt(struct CLIHandle *Handle)
  ******************************************************************************/
 bool CLI_RunLine(struct CLIHandle *Handle,char *Line)
 {
-//    struct CLIHandlePrv *CLI=(struct CLIHandlePrv *)Handle;
+    struct CLIHandlePrv *CLI=(struct CLIHandlePrv *)Handle;
     unsigned int cmd;    // The command index we are looking at
     int len;    // The len of the current command we are looking at
 
@@ -1065,7 +1079,7 @@ bool CLI_RunLine(struct CLIHandle *Handle,char *Line)
                 (Line[len]==0 || Line[len]==' '))
         {
             /* Found a command, run it */
-            CLI_RunCMD(Line,&g_CLICmds[cmd]);
+            CLI_RunCMD(CLI,Line,&g_CLICmds[cmd]);
             break;
         }
     }
@@ -1108,9 +1122,11 @@ static void CLIPrintStr(const char *Str)
  *    CLI_RunCMD
  *
  * SYNOPSIS:
- *    static void CLI_RunCMD(char *Line,const struct CLICommand *Cmd)
+ *    static void CLI_RunCMD(struct CLIHandlePrv *CLI,char *Line,
+ *          const struct CLICommand *Cmd)
  *
  * PARAMETERS:
+ *    CLI [I] -- The private data from the command prompt.
  *    Line [I] -- The line that starting this.  This will be overwritten.
  *    Cmd [I] -- The command to run.
  *
@@ -1123,7 +1139,7 @@ static void CLIPrintStr(const char *Str)
  * SEE ALSO:
  *    
  ******************************************************************************/
-static void CLI_RunCMD(char *Line,const struct CLICommand *Cmd)
+static void CLI_RunCMD(struct CLIHandlePrv *CLI,char *Line,const struct CLICommand *Cmd)
 {
     unsigned int r;         // Temp var (for loops)
     unsigned int len;       // The len of the input line
@@ -1150,7 +1166,11 @@ static void CLI_RunCMD(char *Line,const struct CLICommand *Cmd)
     }
 
     if(Cmd->Exec!=NULL)
+    {
+        g_CLI_ActiveCLI=CLI;
+        g_CLI_ActiveCLI->RunningCmd=Cmd;
         Cmd->Exec(Argc,(const char **)Argv);
+    }
 }
 
 /*******************************************************************************
@@ -1228,6 +1248,54 @@ void CLI_DrawPrompt(struct CLIHandle *Handle)
     CLIPrintStr(CLI->Prompt);
 }
 
+
+/*******************************************************************************
+ * NAME:
+ *    CLI_OutputHelpDesc
+ *
+ * SYNOPSIS:
+ *    static void CLI_OutputHelpDesc(int Indent,const char *Label,
+ *              const char *Desc);
+ *
+ * PARAMETERS:
+ *    Indent [I] -- The number to space to indent.  This is mult against the
+ *                  help indent (HELP_INDENT)
+ *    Label [I] -- The label to output
+ *    Desc [I] -- The description to output
+ *
+ * FUNCTION:
+ *    This is a helper function that outputs a label and description of
+ *    a help object.
+ *
+ * RETURNS:
+ *    NONE
+ *
+ * SEE ALSO:
+ *    
+ ******************************************************************************/
+static void CLI_OutputHelpDesc(int Indent,const char *Label,const char *Desc)
+{
+    unsigned int r;
+    const char *pos;
+
+    for(r=0;r<HELP_INDENT*Indent;r++)
+        HAL_CLI_PutChar(' ');
+    CLIPrintStr(Label);
+    CLIPrintStr(" -- ");
+    pos=Desc;
+    while(*pos!=0)
+    {
+        if(*pos=='\n')
+            HAL_CLI_PutChar('\r');
+        HAL_CLI_PutChar(*pos);
+        if(*pos=='\n')
+            for(r=0;r<HELP_INDENT*(Indent+2);r++)
+                HAL_CLI_PutChar(' ');
+        pos++;
+    }
+    CLIPrintStr("\r\n");
+}
+
 /*******************************************************************************
  * NAME:
  *    CLI_CmdHelpStart
@@ -1270,7 +1338,7 @@ void CLI_DrawPrompt(struct CLIHandle *Handle)
  *      // Format fn
  *      CLI_CmdHelp_OptionString(1,"Format","Format the disk");
  *
- *      CLI_HelpEnd(false);
+ *      CLI_CmdHelp_End(false);
  *      return;
  *    }
  *
@@ -1298,6 +1366,7 @@ void CLI_DrawPrompt(struct CLIHandle *Handle)
  ******************************************************************************/
 void CLI_CmdHelp_Start(void)
 {
+    g_CLI_ActiveCLI->ArgsOutput=0;
 }
 
 /*******************************************************************************
@@ -1341,7 +1410,7 @@ void CLI_CmdHelp_Start(void)
  *      // Format fn
  *      CLI_CmdHelp_OptionString(1,"Format","Format the disk");
  *
- *      CLI_HelpEnd(false);
+ *      CLI_CmdHelp_End(false);
  *      return;
  *    }
  *
@@ -1367,6 +1436,21 @@ void CLI_CmdHelp_Start(void)
  ******************************************************************************/
 void CLI_CmdHelp_Arg(const char *Label,const char *Desc)
 {
+    g_CLI_ActiveCLI->ArgsOutput++;
+    g_CLI_ActiveCLI->FirstOption=true;
+    switch(g_CLI_ActiveCLI->HelpState)
+    {
+        case e_CLI_HelpState_Usage:
+            CLIPrintStr(" [");
+            CLIPrintStr(Label);
+            CLIPrintStr("]");
+        break;
+        case e_CLI_HelpState_Details:
+            CLI_OutputHelpDesc(1,Label,Desc);
+        break;
+        case e_CLI_HelpStateMAX:
+        break;
+    }
 }
 
 /*******************************************************************************
@@ -1422,7 +1506,7 @@ void CLI_CmdHelp_Arg(const char *Label,const char *Desc)
  *      // Format fn
  *      CLI_CmdHelp_OptionString(1,"Format","Format the disk");
  *
- *      CLI_HelpEnd(false);
+ *      CLI_CmdHelp_End(false);
  *      return;
  *    }
  *
@@ -1449,6 +1533,17 @@ void CLI_CmdHelp_Arg(const char *Label,const char *Desc)
  ******************************************************************************/
 void CLI_CmdHelp_SubArg(const char *Label,const char *Desc)
 {
+    switch(g_CLI_ActiveCLI->HelpState)
+    {
+        case e_CLI_HelpState_Usage:
+            /* We don't output sub args when doing usage line */
+        break;
+        case e_CLI_HelpState_Details:
+            CLI_OutputHelpDesc(g_CLI_ActiveCLI->ArgsOutput+1,Label,Desc);
+        break;
+        case e_CLI_HelpStateMAX:
+        break;
+    }
 }
 
 /*******************************************************************************
@@ -1505,7 +1600,7 @@ void CLI_CmdHelp_SubArg(const char *Label,const char *Desc)
  *      // Format fn
  *      CLI_CmdHelp_OptionString(1,"Format","Format the disk");
  *
- *      CLI_HelpEnd(false);
+ *      CLI_CmdHelp_End(false);
  *      return;
  *    }
  *
@@ -1532,6 +1627,22 @@ void CLI_CmdHelp_SubArg(const char *Label,const char *Desc)
  ******************************************************************************/
 void CLI_CmdHelp_OptionString(int Level,const char *Option,const char *Desc)
 {
+    switch(g_CLI_ActiveCLI->HelpState)
+    {
+        case e_CLI_HelpState_Usage:
+            /* We don't output options when doing usage line */
+        break;
+        case e_CLI_HelpState_Details:
+            if(g_CLI_ActiveCLI->FirstOption)
+            {
+                g_CLI_ActiveCLI->ArgsOutput++;
+                g_CLI_ActiveCLI->FirstOption=false;
+            }
+            CLI_OutputHelpDesc(Level+2,Option,Desc);
+        break;
+        case e_CLI_HelpStateMAX:
+        break;
+    }
 }
 
 /*******************************************************************************
@@ -1563,7 +1674,7 @@ void CLI_CmdHelp_OptionString(int Level,const char *Option,const char *Desc)
  *    CLI_CmdHelp_OptionString(0,"write","Write bytes");
  *    CLI_CmdHelp_DotDotDot();
  *
- *    CLI_HelpEnd();
+ *    CLI_CmdHelp_End();
  *
  *    Outputs:
  *      USAGE:
@@ -1577,6 +1688,17 @@ void CLI_CmdHelp_OptionString(int Level,const char *Option,const char *Desc)
  ******************************************************************************/
 void CLI_CmdHelp_DotDotDot(void)
 {
+    switch(g_CLI_ActiveCLI->HelpState)
+    {
+        case e_CLI_HelpState_Usage:
+            CLIPrintStr(" ...");
+        break;
+        case e_CLI_HelpState_Details:
+            /* We only output the ... on the usage line */
+        break;
+        case e_CLI_HelpStateMAX:
+        break;
+    }
 }
 
 /*******************************************************************************
@@ -1601,6 +1723,17 @@ void CLI_CmdHelp_DotDotDot(void)
  ******************************************************************************/
 void CLI_CmdHelp_End(void)
 {
+    switch(g_CLI_ActiveCLI->HelpState)
+    {
+        case e_CLI_HelpState_Usage:
+            CLIPrintStr("\r\n");
+        break;
+        case e_CLI_HelpState_Details:
+            /* Nothing to do here */
+        break;
+        case e_CLI_HelpStateMAX:
+        break;
+    }
 }
 
 /*******************************************************************************
@@ -1627,5 +1760,27 @@ void CLI_CmdHelp_End(void)
  ******************************************************************************/
 void CLI_ShowCmdHelp(void)
 {
-}
+    unsigned int r;
 
+    if(g_CLI_ActiveCLI==NULL || g_CLI_ActiveCLI->RunningCmd==NULL ||
+            g_CLI_ActiveCLI->RunningCmd->Exec==NULL)
+    {
+        return;
+    }
+
+    g_CLI_ActiveCLI->HelpState=e_CLI_HelpState_Usage;
+
+    /* Output the usage banner */
+    CLIPrintStr("USAGE:\r\n");
+    for(r=0;r<HELP_INDENT;r++)
+        HAL_CLI_PutChar(' ');
+    CLIPrintStr(g_CLI_ActiveCLI->RunningCmd->Cmd);
+    /* Call command to have it output the usage banner */
+    g_CLI_ActiveCLI->RunningCmd->Exec(0,NULL);
+
+    /* Output the details */
+    g_CLI_ActiveCLI->HelpState=e_CLI_HelpState_Details;
+    CLIPrintStr("\r\nWHERE:\r\n");
+    /* Call command again to have it output the details */
+    g_CLI_ActiveCLI->RunningCmd->Exec(0,NULL);
+}
