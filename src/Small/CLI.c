@@ -43,7 +43,6 @@
 
 /*** HEADER FILES TO INCLUDE  ***/
 #include "../CLI.h"
-#include "CLI_HAL.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
@@ -215,14 +214,14 @@ char *CLI_GetLine(struct CLIHandle *Handle)
        get one assume this was really an ESC (and not an escape seq) */
     if(CLI->ESCPos>0)
     {
-        if(HAL_CLI_GetMilliSecCounter()-CLI->ESCStart>250)
+        if(CLI_GET_MILLISEC_COUNTER()-CLI->ESCStart>250)
             c=27;
     }
 
-    if(HAL_CLI_IsCharAvailable() || c!=0)
+    if(CLI_IS_CHAR_AVAILABLE() || c!=0)
     {
         if(c==0)
-            c=HAL_CLI_GetChar();
+            c=CLI_GETCHAR();
 
         if(CLI->ESCPos>0)
         {
@@ -248,15 +247,15 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                     switch(c)
                     {
                         case 'C':   // Right
-                            if(CLI->LineBuffInsertPos<strlen(CLI->LineBuff))
+                            if(CLI->LineBuffInsertPos<STRLEN(CLI->LineBuff))
                             {
                                 if(CLI->PasswordMode)
                                 {
-                                    HAL_CLI_PutChar('*');
+                                    CLI_PUTCHAR('*');
                                 }
                                 else
                                 {
-                                    HAL_CLI_PutChar(CLI->
+                                    CLI_PUTCHAR(CLI->
                                             LineBuff[CLI->LineBuffInsertPos]);
                                 }
                                 CLI->LineBuffInsertPos++;
@@ -266,7 +265,7 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                         case 'D':   // Left
                             if(CLI->LineBuffInsertPos>0)
                                 CLI->LineBuffInsertPos--;
-                            HAL_CLI_PutChar('\b');
+                            CLI_PUTCHAR('\b');
                             CLI->ESCPos=0;
                         break;
                         case '4':   // End
@@ -275,17 +274,17 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                             {
                                 if(CLI->PasswordMode)
                                 {
-                                    HAL_CLI_PutChar('*');
+                                    CLI_PUTCHAR('*');
                                 }
                                 else
                                 {
-                                    HAL_CLI_PutChar(CLI->
+                                    CLI_PUTCHAR(CLI->
                                             LineBuff[CLI->LineBuffInsertPos]);
                                 }
                             }
                         break;
                         case '3':   // Del
-                            l=strlen(CLI->LineBuff);
+                            l=STRLEN(CLI->LineBuff);
                             if(CLI->LineBuffInsertPos<l)
                             {
                                 /* Copy the char above the current pos */
@@ -299,7 +298,7 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                             for(;CLI->LineBuffInsertPos>0;
                                     CLI->LineBuffInsertPos--)
                             {
-                                HAL_CLI_PutChar('\b');
+                                CLI_PUTCHAR('\b');
                             }
                         break;
                         case 'A':   // Up
@@ -341,18 +340,18 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                                 if(CLI->HistoryPos>CLI->HistoryBuff)
                                     CLI->HistoryPos--;
 
-                                l=strlen(CLI->LineBuff);
+                                l=STRLEN(CLI->LineBuff);
                                 for(CLI->LineBuffInsertPos=0;
                                         CLI->LineBuffInsertPos<l;
                                         CLI->LineBuffInsertPos++)
                                 {
                                     if(CLI->PasswordMode)
                                     {
-                                        HAL_CLI_PutChar('*');
+                                        CLI_PUTCHAR('*');
                                     }
                                     else
                                     {
-                                        HAL_CLI_PutChar(CLI->LineBuff[
+                                        CLI_PUTCHAR(CLI->LineBuff[
                                                 CLI->LineBuffInsertPos]);
                                     }
                                 }
@@ -384,18 +383,18 @@ char *CLI_GetLine(struct CLIHandle *Handle)
 
                                 strcpy(CLI->LineBuff,CLI->HistoryPos);
 
-                                l=strlen(CLI->LineBuff);
+                                l=STRLEN(CLI->LineBuff);
                                 for(CLI->LineBuffInsertPos=0;
                                         CLI->LineBuffInsertPos<l;
                                         CLI->LineBuffInsertPos++)
                                 {
                                     if(CLI->PasswordMode)
                                     {
-                                        HAL_CLI_PutChar('*');
+                                        CLI_PUTCHAR('*');
                                     }
                                     else
                                     {
-                                        HAL_CLI_PutChar(CLI->LineBuff[
+                                        CLI_PUTCHAR(CLI->LineBuff[
                                                 CLI->LineBuffInsertPos]);
                                     }
 
@@ -435,12 +434,12 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                 break;
                 case 27:    /* ANSI codes */
                     CLI->ESCPos=1;
-                    CLI->ESCStart=HAL_CLI_GetMilliSecCounter();
+                    CLI->ESCStart=CLI_GET_MILLISEC_COUNTER();
                 break;
                 case '\r':
                     /* We are done */
-                    HAL_CLI_PutChar('\n');
-                    HAL_CLI_PutChar('\r');
+                    CLI_PUTCHAR('\n');
+                    CLI_PUTCHAR('\r');
 
                     /* Add to the end of the history buffer (if we have one,
                        it's not a blank line, and the last key was not an
@@ -449,7 +448,7 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                     {
                         if(CLI->LastKeyType==e_CLILastKey_Other)
                         {
-                            l=strlen(CLI->LineBuff)+1;  // We need space for the \0
+                            l=STRLEN(CLI->LineBuff)+1;  // We need space for the \0
 
                             h=NULL;
                             while(l<=CLI->HistoryBuffSize)
@@ -487,12 +486,12 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                                         break;
 
                                     /* Figure out how many bytes to copy (the
-                                       size-the strlen of the first entry) */
+                                       size-the STRLEN of the first entry) */
                                     bytes=CLI->HistoryBuffSize-(h-CLI->HistoryBuff);
                                     memcpy(CLI->HistoryBuff,h,bytes);
 
                                     /* The number of bytes to clear at the end
-                                       of the buffer (strlen of first entry +
+                                       of the buffer (STRLEN of first entry +
                                        old padding space) */
                                     bytes=h-CLI->HistoryBuff+p;
                                     memset(CLI->HistoryBuff+
@@ -533,19 +532,19 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                         CLI->LineBuffInsertPos--;
 
                         /* Copy the char above the current pos */
-                        l=strlen(CLI->LineBuff);
+                        l=STRLEN(CLI->LineBuff);
                         for(p=CLI->LineBuffInsertPos;p<l;p++)
                             CLI->LineBuff[p]=CLI->LineBuff[p+1];
 
                         /* Move over the char we just deleted, then redraw
                            the end of the line */
-                        HAL_CLI_PutChar('\b');
+                        CLI_PUTCHAR('\b');
                         CLI_EchoEndOfPromptLine(CLI,l-1);
                     }
                     CLI->LastKeyType=e_CLILastKey_Other;
                 break;
                 default:
-                    l=strlen(CLI->LineBuff);
+                    l=STRLEN(CLI->LineBuff);
                     if(l<CLI->MaxLineSize-1)
                     {
                         /* Make room */
@@ -561,9 +560,9 @@ char *CLI_GetLine(struct CLIHandle *Handle)
 
                         /* Move one char over */
                         if(CLI->PasswordMode)
-                            HAL_CLI_PutChar('*');
+                            CLI_PUTCHAR('*');
                         else
-                            HAL_CLI_PutChar(c);
+                            CLI_PUTCHAR(c);
                     }
                     CLI->LastKeyType=e_CLILastKey_Other;
                 break;
@@ -606,17 +605,17 @@ static void CLI_EchoEndOfPromptLine(struct CLIHandlePrv *CLI,unsigned int len)
     for(p=CLI->LineBuffInsertPos;p<len;p++)
     {
         if(CLI->PasswordMode)
-            HAL_CLI_PutChar('*');
+            CLI_PUTCHAR('*');
         else
-            HAL_CLI_PutChar(CLI->LineBuff[p]);
+            CLI_PUTCHAR(CLI->LineBuff[p]);
     }
 
     /* Add a space on the end to kill off any deleted chars */
-    HAL_CLI_PutChar(' ');
+    CLI_PUTCHAR(' ');
 
     /* Now back up to where we should be */
     for(p=CLI->LineBuffInsertPos;p<len+1;p++)
-        HAL_CLI_PutChar('\b');
+        CLI_PUTCHAR('\b');
 }
 
 /*******************************************************************************
@@ -672,19 +671,19 @@ static void CLI_EraseCurrentLine(struct CLIHandlePrv *CLI)
     unsigned int p;
     unsigned int len;
 
-    len=strlen(CLI->LineBuff);
+    len=STRLEN(CLI->LineBuff);
 
     /* Goto the start of the line */
     for(;CLI->LineBuffInsertPos>0;CLI->LineBuffInsertPos--)
-        HAL_CLI_PutChar('\b');
+        CLI_PUTCHAR('\b');
 
     /* Space over the whole thing */
     for(p=0;p<len;p++)
-        HAL_CLI_PutChar(' ');
+        CLI_PUTCHAR(' ');
 
     /* Now back up to the start */
     for(p=0;p<len;p++)
-        HAL_CLI_PutChar('\b');
+        CLI_PUTCHAR('\b');
 }
 
 /*******************************************************************************
@@ -916,7 +915,7 @@ bool CLI_RunLine(struct CLIHandle *Handle,char *Line)
     /* We got a line, scan the commands */
     for(cmd=0;cmd<g_CLICmdsCount;cmd++)
     {
-        len=strlen(g_CLICmds[cmd].Cmd);
+        len=STRLEN(g_CLICmds[cmd].Cmd);
         if(STRNCMP(Line,g_CLICmds[cmd].Cmd,len)==0 &&
                 (Line[len]==0 || Line[len]==' '))
         {
@@ -954,7 +953,7 @@ static void CLIPrintStr(const char *Str)
 {
     while(*Str!=0)
     {
-        HAL_CLI_PutChar(*Str);
+        CLI_PUTCHAR(*Str);
         Str++;
     }
 }
@@ -988,7 +987,7 @@ static void CLI_RunCMD(struct CLIHandlePrv *CLI,char *Line,const struct CLIComma
     uint16_t Argc;          // The number of args
     char *Argv[CLI_MAX_ARGS];   // The argv's we are sending
 
-    len=strlen(Line);
+    len=STRLEN(Line);
 
     /* Split up the command line */
     Argc=0;
@@ -1043,7 +1042,7 @@ void CLI_DisplayHelp(void)
     MaxWidth=8;
     for(cmd=0;cmd<g_CLICmdsCount;cmd++)
     {
-        len=strlen(g_CLICmds[cmd].Cmd);
+        len=STRLEN(g_CLICmds[cmd].Cmd);
         if(len>MaxWidth)
             MaxWidth=len;
     }
@@ -1054,9 +1053,9 @@ void CLI_DisplayHelp(void)
     {
         CLIPrintStr(g_CLICmds[cmd].Cmd);
 
-        len=strlen(g_CLICmds[cmd].Cmd);
+        len=STRLEN(g_CLICmds[cmd].Cmd);
         for(;len<MaxWidth;len++)
-            HAL_CLI_PutChar(' ');
+            CLI_PUTCHAR(' ');
 
         CLIPrintStr(g_CLICmds[cmd].Help);
         CLIPrintStr("\r\n");
@@ -1123,18 +1122,18 @@ void CLI_OutputHelpDesc(unsigned int Indent,const char *Label,const char *Desc)
     const char *pos;
 
     for(r=0;r<HELP_INDENT*Indent;r++)
-        HAL_CLI_PutChar(' ');
+        CLI_PUTCHAR(' ');
     CLIPrintStr(Label);
     CLIPrintStr(" -- ");
     pos=Desc;
     while(*pos!=0)
     {
         if(*pos=='\n')
-            HAL_CLI_PutChar('\r');
-        HAL_CLI_PutChar(*pos);
+            CLI_PUTCHAR('\r');
+        CLI_PUTCHAR(*pos);
         if(*pos=='\n')
             for(r=0;r<HELP_INDENT*(Indent+2);r++)
-                HAL_CLI_PutChar(' ');
+                CLI_PUTCHAR(' ');
         pos++;
     }
     CLIPrintStr("\r\n");
@@ -1621,7 +1620,7 @@ void CLI_ShowCmdHelp(void)
     /* Output the usage banner */
     CLIPrintStr("USAGE:\r\n");
     for(r=0;r<HELP_INDENT;r++)
-        HAL_CLI_PutChar(' ');
+        CLI_PUTCHAR(' ');
     CLIPrintStr(g_CLI_ActiveCLI->RunningCmd->Cmd);
     /* Call command to have it output the usage banner */
     g_CLI_ActiveCLI->RunningCmd->Exec(0,NULL);

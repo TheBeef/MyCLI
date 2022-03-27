@@ -1,5 +1,5 @@
 #include "CLI.h"
-#include "CLI_HAL.h"
+#include "CLI_Options.h"
 #include <stdlib.h>
 #include <string.h>
 #include <sys/select.h>

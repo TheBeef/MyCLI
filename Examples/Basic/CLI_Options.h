@@ -39,19 +39,19 @@
 #define __CLI_OPTIONS_H_
 
 /***  HEADER FILES TO INCLUDE          ***/
+#include <stdbool.h>
+#include <stdint.h>
 
 /***  DEFINES                          ***/
 #define CLI_MAX_PROMPTS                 1               // The number of command prompt we can have
 #define CLI_MAX_ARGS                    10              // The max number of argv's pointers (allocated on the stack)
-#define STRNCMP                         strncasecmp
-#define STRLEN                          strlen
+#define CLI_MICRO_BUFFSIZE              40              // MICRO BUILD ONLY.  The number of bytes in the line editing buffer for the micro version
 
 /* If this is defined then the command help system (CLI_CmdHelpStart()) is
    converted to blanks in the preprocessor.  This removes all the help
    strings from your code without you needing to change your code. */
 //#define CLI_REMOVE_CMDHELP
 
-//#define CLI_MICRO_BUFFSIZE          100 // The number of bytes in the line editing buffer for the micro version
 
 /***  MACROS                           ***/
 
@@ -62,5 +62,108 @@
 /***  GLOBAL VARIABLE DEFINITIONS      ***/
 
 /***  EXTERNAL FUNCTION PROTOTYPES     ***/
+
+/* User provided functions */
+#define STRNCMP(a,b,c)                  strncasecmp(a,b,c)
+#define STRLEN(a)                       strlen(a)
+#define CLI_IS_CHAR_AVAILABLE()         HAL_CLI_IsCharAvailable()
+#define CLI_GETCHAR()                   HAL_CLI_GetChar()
+#define CLI_PUTCHAR(c)                  HAL_CLI_PutChar(c)
+#define CLI_GET_MILLISEC_COUNTER()      HAL_CLI_GetMilliSecCounter()
+
+/* Example function prototypes */
+/*******************************************************************************
+ * NAME:
+ *    HAL_CLI_IsCharAvailable
+ *
+ * SYNOPSIS:
+ *    bool HAL_CLI_IsCharAvailable(void);
+ *
+ * PARAMETERS:
+ *    NONE
+ *
+ * FUNCTION:
+ *    This function is called to see if there is at least one byte that can
+ *    be read by HAL_CLI_GetChar().
+ *
+ * RETURNS:
+ *    true -- There is a char available.
+ *    false -- There are no bytes ready.
+ *
+ * SEE ALSO:
+ *    HAL_CLI_GetChar()
+ ******************************************************************************/
+bool HAL_CLI_IsCharAvailable(void);
+/*******************************************************************************
+ * NAME:
+ *    HAL_CLI_GetChar
+ *
+ * SYNOPSIS:
+ *    char HAL_CLI_GetChar(void);
+ *
+ * PARAMETERS:
+ *    NONE
+ *
+ * FUNCTION:
+ *    This function is called to get a char from the input stream.  This
+ *    function will only be called if HAL_CLI_IsCharAvailable() returns
+ *    true, so it can block.
+ *
+ * RETURNS:
+ *    The char that has been read.
+ *
+ * SEE ALSO:
+ *    HAL_CLI_IsCharAvailable(), HAL_CLI_PutChar()
+ ******************************************************************************/
+char HAL_CLI_GetChar(void);
+/*******************************************************************************
+ * NAME:
+ *    HAL_CLI_PutChar
+ *
+ * SYNOPSIS:
+ *    void HAL_CLI_PutChar(char c);
+ *
+ * PARAMETERS:
+ *    c [I] -- The char to output.
+ *
+ * FUNCTION:
+ *    This function is called when the command line whats to output a char.
+ *
+ * RETURNS:
+ *    NONE
+ *
+ * NOTES:
+ *    It is expected that the output device will support \b \r and \n.
+ *
+ * SEE ALSO:
+ *    HAL_CLI_GetChar()
+ ******************************************************************************/
+void HAL_CLI_PutChar(char c);
+/*******************************************************************************
+ * NAME:
+ *    HAL_CLI_GetMilliSecCounter
+ *
+ * SYNOPSIS:
+ *    uint32_t HAL_CLI_GetMilliSecCounter(void);
+ *
+ * PARAMETERS:
+ *    NONE
+ *
+ * FUNCTION:
+ *    This function is called to get a milli second counter.  This counter
+ *    inc's every milli second (or there abouts) and does not wrap at 1 second.
+ *    It is a continuous counter.
+ *
+ * RETURNS:
+ *    The number of milli seconds that have gone by.
+ *
+ * NOTES:
+ *    If you do not support time you can have this function just return 0.
+ *    It only effects the ESC key handling.
+ *
+ * SEE ALSO:
+ *    
+ ******************************************************************************/
+uint32_t HAL_CLI_GetMilliSecCounter(void);
 
 #endif

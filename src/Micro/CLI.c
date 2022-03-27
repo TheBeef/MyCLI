@@ -51,7 +51,6 @@
 
 /*** HEADER FILES TO INCLUDE  ***/
 #include "../CLI.h"
-#include "CLI_HAL.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
@@ -143,7 +142,10 @@ char *CLI_GetLine(struct CLIHandle *Handle)
 {
     unsigned char c;
 
-    c=HAL_CLI_GetChar();
+    if(!CLI_IS_CHAR_AVAILABLE())
+        return NULL;
+
+    c=CLI_GETCHAR();
     switch(c)
     {
         case 0:     // We ignore 0's
@@ -156,8 +158,8 @@ char *CLI_GetLine(struct CLIHandle *Handle)
         break;
         case '\r':
             /* We are done */
-            HAL_CLI_PutChar('\n');
-            HAL_CLI_PutChar('\r');
+            CLI_PUTCHAR('\n');
+            CLI_PUTCHAR('\r');
             return m_CLI_LineBuff;
         break;
         case '\b':
@@ -165,9 +167,9 @@ char *CLI_GetLine(struct CLIHandle *Handle)
             if(m_CLI_LineBuff[0]!=0)
             {
                 m_CLI_LineBuff[STRLEN(m_CLI_LineBuff)-1]=0;
-                HAL_CLI_PutChar('\b');
-                HAL_CLI_PutChar(' ');
-                HAL_CLI_PutChar('\b');
+                CLI_PUTCHAR('\b');
+                CLI_PUTCHAR(' ');
+                CLI_PUTCHAR('\b');
             }
         break;
         default:
@@ -175,7 +177,7 @@ char *CLI_GetLine(struct CLIHandle *Handle)
             {
                 m_CLI_LineBuff[STRLEN(m_CLI_LineBuff)+1]=0;
                 m_CLI_LineBuff[STRLEN(m_CLI_LineBuff)]=c;
-                HAL_CLI_PutChar(c);
+                CLI_PUTCHAR(c);
             }
         break;
         case 255:   // Telnet command
@@ -366,7 +368,7 @@ bool CLI_RunLine(struct CLIHandle *Handle,char *Line)
     /* We got a line, scan the commands */
     for(cmd=0;cmd<g_CLICmdsCount;cmd++)
     {
-        len=strlen(g_CLICmds[cmd].Cmd);
+        len=STRLEN(g_CLICmds[cmd].Cmd);
         if(STRNCMP(Line,g_CLICmds[cmd].Cmd,len)==0 &&
                 (Line[len]==0 || Line[len]==' '))
         {
@@ -432,7 +434,7 @@ static void CLIPrintStr(const char *Str)
 {
     while(*Str!=0)
     {
-        HAL_CLI_PutChar(*Str);
+        CLI_PUTCHAR(*Str);
         Str++;
     }
 }
@@ -491,7 +493,7 @@ void CLI_DisplayHelp(void)
  ******************************************************************************/
 void CLI_DrawPrompt(struct CLIHandle *Handle)
 {
-    HAL_CLI_PutChar('>');
+    CLI_PUTCHAR('>');
 }
 
 /* Don't really like #ifdef's but for it to work with the CLI_Options.h
