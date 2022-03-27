@@ -8,6 +8,9 @@
  *    This file has CLI options in it.  The CLI includes this file from the
  *    library.
  *
+ *    This is an example you need to copy into your compile search path
+ *    and rename to "CLI_Options.h"
+ *
  * COPYRIGHT:
  *    Copyright 2010 Paul Hutchinson
  *
@@ -31,7 +34,7 @@
  *    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * HISTORY:
- *    Paul Hutchinson (15 Mar 2022)
+ *    Paul Hutchinson (27 Mar 2022)
  *       Created
  *
  *******************************************************************************/
@@ -43,7 +46,8 @@
 /***  DEFINES                          ***/
 #define CLI_MAX_PROMPTS                 1               // The number of command prompt we can have
 #define CLI_MAX_ARGS                    10              // The max number of argv's pointers (allocated on the stack)
-#define STRNCMP                         strncasecmp
+#define CLI_MICRO_BUFFSIZE              40              // MICRO BUILD ONLY.  The number of bytes in the line editing buffer for the micro version
+#define STRNCMP                         strncmp
 #define STRLEN                          strlen
 
 /* If this is defined then the command help system (CLI_CmdHelpStart()) is
@@ -51,7 +55,6 @@
    strings from your code without you needing to change your code. */
 //#define CLI_REMOVE_CMDHELP
 
-//#define CLI_MICRO_BUFFSIZE          100 // The number of bytes in the line editing buffer for the micro version
 
 /***  MACROS                           ***/
 
