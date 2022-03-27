@@ -23,13 +23,13 @@ int quit=false;
 
 void quitfn(int argc,const char **argv);
 void helpfn(int argc,const char **argv);
-void onefn(int argc,const char **argv);
+void Drivefn(int argc,const char **argv);
 
 const struct CLICommand g_CLICmds[]=
 {
     {"Quit","Quit the program",quitfn},
     {"Help","Get help",helpfn},
-    {"one","test help",onefn},
+    {"Drive","Example of the help / auto complete",Drivefn},
 };
 
 unsigned int g_CLICmdsCount=sizeof(g_CLICmds)/sizeof(struct CLICommand);
@@ -127,7 +127,7 @@ void helpfn(int argc,const char **argv)
     CLI_DisplayHelp();
 }
 
-void onefn(int argc,const char **argv)
+void Drivefn(int argc,const char **argv)
 {
     int bytes;
     int offset;
@@ -215,4 +215,3 @@ void onefn(int argc,const char **argv)
         return;
     }
 }
-

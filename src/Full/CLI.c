@@ -85,6 +85,7 @@ typedef enum
 {
     e_CLI_HelpState_Usage=0,
     e_CLI_HelpState_Details,
+    e_CLI_HelpState_AutoComplete,
     e_CLI_HelpStateMAX
 } e_CLI_HelpStateType;
 
@@ -106,6 +107,14 @@ struct CLIHandlePrv
     unsigned int ArgsOutput;        // How many args have to output so far (used for indenting)
     e_CLI_HelpStateType HelpState;  // What is the help system currently doing
     bool FirstOption;               // Is this the first option we are outputing
+
+    int AutoComplete_CurrentLevel;      // What is the level of help we are current in (is it the one we are searching for?)
+    int AutoComplete_CurrentOption;     // How many options have we seen so far
+    int AutoComplete_Search4;           // What level are we searching for
+    int AutoComplete_LastMatch;         // What was the index of the last match we had
+    const char *AutoComplete_SavedPos;  // The pos in the line buffer the cursor was when we started
+    const char *AutoComplete_FoundStr;  // What is the string to auto complete to
+    int AutoComplete_Index;             // What point did we last find (so we can continue searching)
 };
 
 /*** FUNCTION PROTOTYPES      ***/
@@ -115,7 +124,9 @@ static void CLI_ResetHistory(struct CLIHandlePrv *CLI);
 static void CLI_ResetInputBuffer(struct CLIHandlePrv *CLI);
 static void CLIPrintStr(const char *Str);
 static void CLI_RunCMD(struct CLIHandlePrv *CLI,char *Line,const struct CLICommand *Cmd);
-void CLI_OutputHelpDesc(int Indent,const char *Label,const char *Desc);
+void CLI_OutputHelpDesc(unsigned int Indent,const char *Label,const char *Desc);
+static void HandleAutoComplete(struct CLIHandlePrv *CLI);
+static void ClearAutoComplete(struct CLIHandlePrv *CLI);
 
 /*** VARIABLE DEFINITIONS     ***/
 static uint8_t m_CLI_AllocatedPrompts;
@@ -359,6 +370,8 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                 CLI->TelnetOpt=e_CLITelnetOpt_None;
             break;
             case e_CLITelnetOpt_IAC:
+            case e_CLITelnetOpt_None:
+            case e_CLITelnetMAX:
             default:
                 CLI->TelnetOpt=e_CLITelnetOpt_None;
             break;
@@ -397,6 +410,7 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                         /* ESC again */
                         CLI_EraseCurrentLine(CLI);
                         CLI_ResetInputBuffer(CLI);
+                        ClearAutoComplete(CLI);
                     }
                 break;
                 case 3:
@@ -417,12 +431,14 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                                 CLI->LineBuffInsertPos++;
                             }
                             CLI->ESCPos=0;
+                            ClearAutoComplete(CLI);
                         break;
                         case 'D':   // Left
                             if(CLI->LineBuffInsertPos>0)
                                 CLI->LineBuffInsertPos--;
                             HAL_CLI_PutChar('\b');
                             CLI->ESCPos=0;
+                            ClearAutoComplete(CLI);
                         break;
                         case '4':   // End
                             for(;CLI->LineBuff[CLI->LineBuffInsertPos]!=0;
@@ -438,6 +454,7 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                                             LineBuff[CLI->LineBuffInsertPos]);
                                 }
                             }
+                            ClearAutoComplete(CLI);
                         break;
                         case '3':   // Del
                             l=strlen(CLI->LineBuff);
@@ -449,6 +466,7 @@ char *CLI_GetLine(struct CLIHandle *Handle)
 
                                 CLI_EchoEndOfPromptLine(CLI,l-1);
                             }
+                            ClearAutoComplete(CLI);
                         break;
                         case '1':   // Home
                             for(;CLI->LineBuffInsertPos>0;
@@ -456,6 +474,7 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                             {
                                 HAL_CLI_PutChar('\b');
                             }
+                            ClearAutoComplete(CLI);
                         break;
                         case 'A':   // Up
                             if(CLI->HistoryBuff!=NULL)
@@ -514,6 +533,7 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                             }
                             CLI->LastKeyType=e_CLILastKey_Up;
                             CLI->ESCPos=0;
+                            ClearAutoComplete(CLI);
                         break;
                         case 'B':   // Down
                             if(CLI->HistoryBuff!=NULL)
@@ -560,6 +580,7 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                             }
                             CLI->LastKeyType=e_CLILastKey_Down;
                             CLI->ESCPos=0;
+                            ClearAutoComplete(CLI);
                         break;
                         default:
 //                            printf("GOT:%c (%d)\n",c,c);
@@ -587,6 +608,7 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                 break;
                 case 9:     /* Tab */
                     CLI->LastKeyType=e_CLILastKey_Other;
+                    HandleAutoComplete(CLI);
                 break;
                 case 10:    // No new lines please
                 break;
@@ -700,6 +722,7 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                         CLI_EchoEndOfPromptLine(CLI,l-1);
                     }
                     CLI->LastKeyType=e_CLILastKey_Other;
+                    ClearAutoComplete(CLI);
                 break;
                 default:
                     l=strlen(CLI->LineBuff);
@@ -723,6 +746,7 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                             HAL_CLI_PutChar(c);
                     }
                     CLI->LastKeyType=e_CLILastKey_Other;
+                    ClearAutoComplete(CLI);
                 break;
                 case 255:   // Telnet command
                     CLI->TelnetOpt=e_CLITelnetOpt_Cmd;
@@ -1256,7 +1280,7 @@ void CLI_DrawPrompt(struct CLIHandle *Handle)
  *    CLI_OutputHelpDesc
  *
  * SYNOPSIS:
- *    void CLI_OutputHelpDesc(int Indent,const char *Label,
+ *    void CLI_OutputHelpDesc(unsigned int Indent,const char *Label,
  *              const char *Desc);
  *
  * PARAMETERS:
@@ -1275,7 +1299,7 @@ void CLI_DrawPrompt(struct CLIHandle *Handle)
  * SEE ALSO:
  *    
  ******************************************************************************/
-void CLI_OutputHelpDesc(int Indent,const char *Label,const char *Desc)
+void CLI_OutputHelpDesc(unsigned int Indent,const char *Label,const char *Desc)
 {
     unsigned int r;
     const char *pos;
@@ -1450,7 +1474,12 @@ void CLI_CmdHelp_Arg(const char *Label,const char *Desc)
         case e_CLI_HelpState_Details:
             CLI_OutputHelpDesc(1,Label,Desc);
         break;
+        case e_CLI_HelpState_AutoComplete:
+            if(g_CLI_ActiveCLI->AutoComplete_CurrentLevel<0)
+                g_CLI_ActiveCLI->AutoComplete_CurrentOption=0;
+        break;
         case e_CLI_HelpStateMAX:
+        default:
         break;
     }
 }
@@ -1543,7 +1572,9 @@ void CLI_CmdHelp_SubArg(const char *Label,const char *Desc)
         case e_CLI_HelpState_Details:
             CLI_OutputHelpDesc(g_CLI_ActiveCLI->ArgsOutput+1,Label,Desc);
         break;
+        case e_CLI_HelpState_AutoComplete:
         case e_CLI_HelpStateMAX:
+        default:
         break;
     }
 }
@@ -1642,7 +1673,19 @@ void CLI_CmdHelp_OptionString(int Level,const char *Option,const char *Desc)
             }
             CLI_OutputHelpDesc(Level+2,Option,Desc);
         break;
+        case e_CLI_HelpState_AutoComplete:
+            if(g_CLI_ActiveCLI->AutoComplete_CurrentLevel!=Level)
+                break;
+
+            if(g_CLI_ActiveCLI->AutoComplete_CurrentOption==
+                    g_CLI_ActiveCLI->AutoComplete_Search4)
+            {
+                g_CLI_ActiveCLI->AutoComplete_FoundStr=Option;
+            }
+            g_CLI_ActiveCLI->AutoComplete_CurrentOption++;
+        break;
         case e_CLI_HelpStateMAX:
+        default:
         break;
     }
 }
@@ -1698,7 +1741,9 @@ void CLI_CmdHelp_DotDotDot(void)
         case e_CLI_HelpState_Details:
             /* We only output the ... on the usage line */
         break;
+        case e_CLI_HelpState_AutoComplete:
         case e_CLI_HelpStateMAX:
+        default:
         break;
     }
 }
@@ -1733,7 +1778,9 @@ void CLI_CmdHelp_End(void)
         case e_CLI_HelpState_Details:
             /* Nothing to do here */
         break;
+        case e_CLI_HelpState_AutoComplete:
         case e_CLI_HelpStateMAX:
+        default:
         break;
     }
 }
@@ -1801,5 +1848,213 @@ void CLI_ShowCmdHelp(void)
     CLIPrintStr(g_CLI_ActiveCLI->RunningCmd->Help);
     CLIPrintStr("\r\n");
 }
-
 #endif
+
+/*******************************************************************************
+ * NAME:
+ *    ClearAutoComplete
+ *
+ * SYNOPSIS:
+ *    static void ClearAutoComplete(struct CLIHandlePrv *CLI);
+ *
+ * PARAMETERS:
+ *    CLI [I] -- The private data from the command prompt.
+ *
+ * FUNCTION:
+ *    This function clears the auto complete status to no matches.  This is
+ *    done when any key is pressed that should reset the auto complete.
+ *
+ * RETURNS:
+ *    NONE
+ *
+ * SEE ALSO:
+ *    
+ ******************************************************************************/
+static void ClearAutoComplete(struct CLIHandlePrv *CLI)
+{
+    CLI->AutoComplete_LastMatch=0;
+    CLI->AutoComplete_SavedPos=NULL;
+}
+
+/*******************************************************************************
+ * NAME:
+ *    HandleAutoComplete
+ *
+ * SYNOPSIS:
+ *    static void HandleAutoComplete(struct CLIHandlePrv *CLI);
+ *
+ * PARAMETERS:
+ *    CLI [I] -- The private data from the command prompt.
+ *
+ * FUNCTION:
+ *    This function is called to handle the tab key.  It searches the auto
+ *    complete system to see if there are any matches.
+ *
+ * RETURNS:
+ *    NONE
+ *
+ * SEE ALSO:
+ *    ClearAutoComplete()
+ ******************************************************************************/
+static void HandleAutoComplete(struct CLIHandlePrv *CLI)
+{
+    char *Pos;
+    char *StartOfArg;
+    const char *ReplaceStr;
+    int ArgCount;
+    unsigned int cmd;    // The command index we are looking at
+    bool First;
+    int len;    // The len of the current command we are looking at
+    void (*Exec)(int argc,const char **argv);   // The command that is selected
+
+    First=false;
+    if(CLI->AutoComplete_SavedPos==NULL)
+    {
+        /* We only do auto complete at the end */
+        if(CLI->LineBuff[CLI->LineBuffInsertPos]!=0)
+            return;
+
+        CLI->AutoComplete_SavedPos=&CLI->LineBuff[CLI->LineBuffInsertPos];
+        CLI->AutoComplete_Index=0;
+        First=true;
+    }
+
+    /* First find out what level we are at */
+    Pos=CLI->LineBuff;
+    StartOfArg=CLI->LineBuff;
+    ArgCount=0;
+    for(;;)
+    {
+        /* Skip spaces */
+        while(*Pos==' ')
+            Pos++;
+
+        StartOfArg=Pos;
+
+        /* Skip the arg */
+        while(*Pos!=' ' && *Pos!=0)
+            Pos++;
+
+        if(*Pos==0)
+            break;
+
+        ArgCount++;
+    }
+
+    ReplaceStr=NULL;
+    if(ArgCount==0)
+    {
+        /* We are completing the command it's self */
+        cmd=CLI->AutoComplete_Index;
+        do
+        {
+            if(STRNCMP(CLI->LineBuff,g_CLICmds[cmd].Cmd,
+                    CLI->AutoComplete_SavedPos-StartOfArg)==0)
+            {
+                /* Found a command */
+                /* Ignore the first match only if it's an exact match */
+                if(!First || strlen(g_CLICmds[cmd].Cmd)!=
+                        CLI->AutoComplete_SavedPos-StartOfArg)
+                {
+                    ReplaceStr=g_CLICmds[cmd].Cmd;
+                    CLI->AutoComplete_Index=cmd+1;  // Start at the next command
+                    if(CLI->AutoComplete_Index>=g_CLICmdsCount)
+                        CLI->AutoComplete_Index=0;
+                    break;
+                }
+            }
+
+            /* Loop around */
+            cmd++;
+            if(cmd==g_CLICmdsCount)
+                cmd=0;
+        } while(cmd!=CLI->AutoComplete_Index);
+    }
+    else
+    {
+        /* Find the current command */
+        Exec=NULL;
+        for(cmd=0;cmd<g_CLICmdsCount;cmd++)
+        {
+            len=strlen(g_CLICmds[cmd].Cmd);
+            if(STRNCMP(CLI->LineBuff,g_CLICmds[cmd].Cmd,len)==0 &&
+                    (CLI->LineBuff[len]==0 || CLI->LineBuff[len]==' '))
+            {
+                /* Found a command, note it */
+                Exec=g_CLICmds[cmd].Exec;
+                break;
+            }
+        }
+
+        /* No command == nothing to do */
+        if(Exec==NULL)
+            return;
+
+        g_CLI_ActiveCLI=CLI;
+
+        CLI->HelpState=e_CLI_HelpState_AutoComplete;
+        CLI->AutoComplete_CurrentLevel=ArgCount-1;
+
+        CLI->AutoComplete_Search4=CLI->AutoComplete_Index;
+        do
+        {
+            /* Call the help system to get the next option */
+            CLI->AutoComplete_FoundStr=NULL;
+            CLI->AutoComplete_CurrentOption=0;
+            Exec(0,NULL);
+
+            if(CLI->AutoComplete_FoundStr==NULL)
+            {
+                /* No match found, loop around */
+                CLI->AutoComplete_Search4=0;
+            }
+            else
+            {
+                /* See if this matches */
+                if(STRNCMP(StartOfArg,CLI->AutoComplete_FoundStr,
+                        CLI->AutoComplete_SavedPos-StartOfArg)==0)
+                {
+                    /* Found a match */
+                    /* Ignore the first match only if it's an exact match */
+                    if(!First || strlen(CLI->AutoComplete_FoundStr)!=
+                            CLI->AutoComplete_SavedPos-StartOfArg)
+                    {
+                        ReplaceStr=CLI->AutoComplete_FoundStr;
+                        CLI->AutoComplete_Index=CLI->AutoComplete_Search4+1;  // Start at the next arg
+                        break;
+                    }
+                }
+                CLI->AutoComplete_Search4++;
+            }
+        } while(CLI->AutoComplete_Search4!=CLI->AutoComplete_Index);
+    }
+
+    /* Replace the string in LineBuff */
+    if(ReplaceStr!=NULL)
+    {
+        /* Make sure it's going to fit */
+        if((StartOfArg-CLI->LineBuff)+strlen(ReplaceStr)>CLI->MaxLineSize)
+        {
+            /* Not going to fit, ignore */
+            return;
+        }
+
+        /* TODO: This could be improved by backing all the way up, printing
+           the new string, and then printing spaces over the delta and then
+           backing up by the delta again, or just using ANSI codes */
+
+        /* Erase the old string and replace it */
+        for(Pos=StartOfArg;*Pos!=0;Pos++)
+            HAL_CLI_PutChar('\b');
+        for(Pos=StartOfArg;*Pos!=0;Pos++)
+            HAL_CLI_PutChar(' ');
+        for(Pos=StartOfArg;*Pos!=0;Pos++)
+            HAL_CLI_PutChar('\b');
+
+        *StartOfArg=0;
+        strcpy(StartOfArg,ReplaceStr);
+
+        CLIPrintStr(StartOfArg);
+        CLI->LineBuffInsertPos=strlen(CLI->LineBuff);
+    }
+}
