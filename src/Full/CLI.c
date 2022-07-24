@@ -1,5 +1,3 @@
-// Maybe:AEPrompt??
-
 /*******************************************************************************
  * FILENAME: CLI.c
  *
@@ -90,30 +88,30 @@ typedef enum
 
 struct CLIHandlePrv
 {
-    char *LineBuff;                 // The line editing buffer
-    unsigned int MaxLineSize;       // The size of 'LineBuff'
-    unsigned int LineBuffInsertPos; // Where are with in the 'LineBuff'
-    e_CLILastKeyType LastKeyType;   // Was the last key pressed an array (up/down) key
-    char *HistoryBuff;              // The buffer we are using for the history
-    uint16_t HistoryBuffSize;       // the size of 'm_CLIHistoryBuff'
-    char *HistoryPos;               // Where are we in the history buff
-    bool PasswordMode;              // Are we asking for a password
-    e_CLITelnetType TelnetOpt;      // What operation are we going to do on the next byte
-    uint8_t ESCPos;                 // The pos in the ANSI escape seq we have gotten
-    uint32_t ESCStart;              // The time that the ESC key was pressed
-    const char *Prompt;             // The command prompt string
-    const struct CLICommand *RunningCmd;    // The command we are currently running (used by the help system)
-    unsigned int ArgsOutput;        // How many args have to output so far (used for indenting)
-    e_CLI_HelpStateType HelpState;  // What is the help system currently doing
-    bool FirstOption;               // Is this the first option we are outputing
+    char *LineBuff;                             // The line editing buffer
+    unsigned int MaxLineSize;                   // The size of 'LineBuff'
+    unsigned int LineBuffInsertPos;             // Where are with in the 'LineBuff'
+    e_CLILastKeyType LastKeyType;               // Was the last key pressed an array (up/down) key
+    char *HistoryBuff;                          // The buffer we are using for the history
+    uint16_t HistoryBuffSize;                   // the size of 'm_CLIHistoryBuff'
+    char *HistoryPos;                           // Where are we in the history buff
+    bool PasswordMode;                          // Are we asking for a password
+    e_CLITelnetType TelnetOpt;                  // What operation are we going to do on the next byte
+    uint8_t ESCPos;                             // The pos in the ANSI escape seq we have gotten
+    uint32_t ESCStart;                          // The time that the ESC key was pressed
+    const char *Prompt;                         // The command prompt string
+    const struct CLICommand *RunningCmd;        // The command we are currently running (used by the help system)
+    unsigned int ArgsOutput;                    // How many args have to output so far (used for indenting)
+    e_CLI_HelpStateType HelpState;              // What is the help system currently doing
+    bool FirstOption;                           // Is this the first option we are outputing
 
-    int AutoComplete_CurrentLevel;      // What is the level of help we are current in (is it the one we are searching for?)
-    int AutoComplete_CurrentOption;     // How many options have we seen so far
-    int AutoComplete_Search4;           // What level are we searching for
-    int AutoComplete_LastMatch;         // What was the index of the last match we had
-    const char *AutoComplete_SavedPos;  // The pos in the line buffer the cursor was when we started
-    const char *AutoComplete_FoundStr;  // What is the string to auto complete to
-    int AutoComplete_Index;             // What point did we last find (so we can continue searching)
+    int AutoComplete_CurrentLevel;              // What is the level of help we are current in (is it the one we are searching for?)
+    unsigned int AutoComplete_CurrentOption;    // How many options have we seen so far
+    unsigned int AutoComplete_Search4;          // What level are we searching for
+    int AutoComplete_LastMatch;                 // What was the index of the last match we had
+    const char *AutoComplete_SavedPos;          // The pos in the line buffer the cursor was when we started
+    const char *AutoComplete_FoundStr;          // What is the string to auto complete to
+    unsigned int AutoComplete_Index;            // What point did we last find (so we can continue searching)
 };
 
 /*** FUNCTION PROTOTYPES      ***/
@@ -687,8 +685,8 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                             }
 
                             /* Copy in the new entry if we have space */
-                            if(h!=NULL &&
-                                    l<=CLI->HistoryBuff+CLI->HistoryBuffSize-h)
+                            if(h!=NULL && l<=(unsigned int)(CLI->HistoryBuff+
+                                    CLI->HistoryBuffSize-h))
                             {
                                 strcpy(h,CLI->LineBuff);
                                 CLI->HistoryPos=h+l-1;
@@ -1953,7 +1951,7 @@ static void HandleAutoComplete(struct CLIHandlePrv *CLI)
                 /* Found a command */
                 /* Ignore the first match only if it's an exact match */
                 if(!First || STRLEN(g_CLICmds[cmd].Cmd)!=
-                        CLI->AutoComplete_SavedPos-StartOfArg)
+                        (size_t)(CLI->AutoComplete_SavedPos-StartOfArg))
                 {
                     ReplaceStr=g_CLICmds[cmd].Cmd;
                     CLI->AutoComplete_Index=cmd+1;  // Start at the next command
@@ -2016,7 +2014,7 @@ static void HandleAutoComplete(struct CLIHandlePrv *CLI)
                     /* Found a match */
                     /* Ignore the first match only if it's an exact match */
                     if(!First || STRLEN(CLI->AutoComplete_FoundStr)!=
-                            CLI->AutoComplete_SavedPos-StartOfArg)
+                            (size_t)(CLI->AutoComplete_SavedPos-StartOfArg))
                     {
                         ReplaceStr=CLI->AutoComplete_FoundStr;
                         CLI->AutoComplete_Index=CLI->AutoComplete_Search4+1;  // Start at the next arg
