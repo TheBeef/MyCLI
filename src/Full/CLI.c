@@ -340,6 +340,19 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                         CLI_PUTCHAR(253);       // DO
                         CLI_PUTCHAR(3);         // Suppress go ahead
                     break;
+                    case 34: // Linemode
+                        /* We do not support this, however we use it to tell
+                           the other side we don't want echo */
+                        /* We don't support this */
+                        CLI_PUTCHAR(255);       // IAC
+                        CLI_PUTCHAR(252);       // WONT
+                        CLI_PUTCHAR(34);        // Linemode
+
+                        /* We WILL do the echoing */
+                        CLI_PUTCHAR(255);       // IAC
+                        CLI_PUTCHAR(251);       // WILL
+                        CLI_PUTCHAR(1);         // Echo
+                    break;
                     default:
                         /* We don't support this */
                         CLI_PUTCHAR(255);       // IAC
