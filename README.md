@@ -7,10 +7,12 @@ This is a quick start guide to getting MyCLI up and running fast.
 This will assume you have your own `main.c` in a directory that we will work off.
 
 The quick start will be assume you have the following directory structure:
+```
 QuickStart/main.c
 QuickStart/MyCLI/src/CLI.h
 QuickStart/MyCLI/src/Example_CLI_Options.h
 QuickStart/MyCLI/src/Full/CLI.c
+```
 
 ### Step 1
 Copy QuickStart/MyCLI/src/Example_CLI_Options.h to QuickStart/CLI_Options.h
@@ -28,7 +30,7 @@ Add the following functions to your main.c (and fill them in with working code):
 So for example you can set these functions up to talk on your UART.
 
 ### Step 3
-Add a structure for your commands.
+Add a structure for your commands to your main.c file.
 
 ```
 const struct CLICommand g_CLICmds[]=
@@ -58,12 +60,16 @@ Init the prompt in main()
     CLI_InitPrompt(Prompt);
     CLI_SetLineBuffer(Prompt,LineBuff,sizeof(LineBuff));
     CLI_SetHistoryBuffer(Prompt,HistoryBuff,sizeof(HistoryBuff));
+```
 
+### Step 6
+Add `CLI_RunCmdPrompt()` to your main while loop.
+```
     CLI_DrawPrompt(Prompt);
     while(1)
         CLI_RunCmdPrompt(Prompt);
 ```
 
-### Step 6
+### Step 7
 Compile.
 `gcc -I MyCLI/src -I . MyCLI/src/Full/CLI.c main.c`
