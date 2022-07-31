@@ -72,8 +72,8 @@
 #define CLI_GET_MILLISEC_COUNTER()      HAL_CLI_GetMilliSecCounter()
 
 /* Example function prototypes */
-//#include <stdbool.h>
-//#include <stdint.h>
+#include <stdbool.h>
+#include <stdint.h>
 /*******************************************************************************
  * NAME:
  *    HAL_CLI_IsCharAvailable
@@ -95,7 +95,7 @@
  * SEE ALSO:
  *    HAL_CLI_GetChar()
  ******************************************************************************/
-//bool HAL_CLI_IsCharAvailable(void);
+bool HAL_CLI_IsCharAvailable(void);
 /*******************************************************************************
  * NAME:
  *    HAL_CLI_GetChar
@@ -117,7 +117,7 @@
  * SEE ALSO:
  *    HAL_CLI_IsCharAvailable(), HAL_CLI_PutChar()
  ******************************************************************************/
-//char HAL_CLI_GetChar(void);
+char HAL_CLI_GetChar(void);
 /*******************************************************************************
  * NAME:
  *    HAL_CLI_PutChar
@@ -140,7 +140,7 @@
  * SEE ALSO:
  *    HAL_CLI_GetChar()
  ******************************************************************************/
-//void HAL_CLI_PutChar(char c);
+void HAL_CLI_PutChar(char c);
 /*******************************************************************************
  * NAME:
  *    HAL_CLI_GetMilliSecCounter
@@ -166,6 +166,6 @@
  * SEE ALSO:
  *    
  ******************************************************************************/
-//uint32_t HAL_CLI_GetMilliSecCounter(void);
+uint32_t HAL_CLI_GetMilliSecCounter(void);
 
 #endif
