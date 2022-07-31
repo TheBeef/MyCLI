@@ -7,6 +7,8 @@ how to use the commands and help.
 
 The important parts of the code are as follows:
 
+| Object       | Description                                    |
+| ------------ | ---------------------------------------------- |
 | g_CLICmds    | This is the list of commands the user can type |
 | SetupIO()    | This function changes the term into raw mode   |
 | ShutDownIO() | This function restores the term                |
