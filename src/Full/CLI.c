@@ -1282,6 +1282,40 @@ void CLI_DrawPrompt(struct CLIHandle *Handle)
     CLIPrintStr(CLI->Prompt);
 }
 
+/*******************************************************************************
+ * NAME:
+ *    CLI_SendTelnetInitConnectionMsg
+ *
+ * SYNOPSIS:
+ *    void CLI_SendTelnetInitConnectionMsg(void);
+ *
+ * PARAMETERS:
+ *    NONE
+ *
+ * FUNCTION:
+ *    This function prints a init seq of Telnet commands.  You should call
+ *    this after you accept a new connection on a prompt to setup telnet
+ *    the way the prompt expects.
+ *
+ * RETURNS:
+ *    NONE
+ *
+ * SEE ALSO:
+ *    
+ ******************************************************************************/
+void CLI_SendTelnetInitConnectionMsg(struct CLIHandle *Handle)
+{
+//    struct CLIHandlePrv *CLI=(struct CLIHandlePrv *)Handle;
+
+    CLI_PUTCHAR(255);   // IAC
+    CLI_PUTCHAR(253);   // DO
+    CLI_PUTCHAR(34);    // LINEMODE
+
+    CLI_PUTCHAR(255);   // IAC
+    CLI_PUTCHAR(251);   // WILL
+    CLI_PUTCHAR(1);     // ECHO
+}
+
 /* Don't really like #ifdef's but for it to work with the CLI_Options.h
    we need to remove them */
 #ifndef CLI_REMOVE_CMDHELP

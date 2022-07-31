@@ -566,8 +566,6 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                     }
                     CLI->LastKeyType=e_CLILastKey_Other;
                 break;
-                case 255:   // Telnet command
-                break;
             }
         }
     }
@@ -1087,6 +1085,31 @@ void CLI_DrawPrompt(struct CLIHandle *Handle)
     struct CLIHandlePrv *CLI=(struct CLIHandlePrv *)Handle;
 
     CLIPrintStr(CLI->Prompt);
+}
+
+/*******************************************************************************
+ * NAME:
+ *    CLI_SendTelnetInitConnectionMsg
+ *
+ * SYNOPSIS:
+ *    void CLI_SendTelnetInitConnectionMsg(void);
+ *
+ * PARAMETERS:
+ *    NONE
+ *
+ * FUNCTION:
+ *    This function prints a init seq of Telnet commands.  This is not
+ *    supported in this version of the prompt but is included so you can
+ *    just link in.
+ *
+ * RETURNS:
+ *    NONE
+ *
+ * SEE ALSO:
+ *    
+ ******************************************************************************/
+void CLI_SendTelnetInitConnectionMsg(struct CLIHandle *Handle)
+{
 }
 
 /* Don't really like #ifdef's but for it to work with the CLI_Options.h
