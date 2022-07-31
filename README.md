@@ -73,3 +73,7 @@ Add `CLI_RunCmdPrompt()` to your main while loop.
 ### Step 7
 Compile.
 `gcc -I MyCLI/src -I . MyCLI/src/Full/CLI.c main.c`
+
+## See also
+Check out `Examples/Basic` for a Linux version that talks on stdio.
+
