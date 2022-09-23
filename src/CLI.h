@@ -71,6 +71,7 @@ void CLI_SetHistoryBuffer(struct CLIHandle *Handle,char *HistoryBuff,
         int MaxSize);
 void CLI_SetPasswordMode(struct CLIHandle *Handle,bool OnOff);
 void CLI_DrawPrompt(struct CLIHandle *Handle);
+void CLI_SetPromptStr(struct CLIHandle *Handle,const char *Prompt);
 void CLI_RunCmdPrompt(struct CLIHandle *Handle);
 void CLI_DisplayHelp(void);
 bool CLI_RunLine(struct CLIHandle *Handle,char *Line);
