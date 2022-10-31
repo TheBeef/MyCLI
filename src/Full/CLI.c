@@ -422,6 +422,7 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                         CLI_ResetInputBuffer(CLI);
                         ClearAutoComplete(CLI);
                     }
+                    c=0;
                 break;
                 case 3:
                     switch(c)
@@ -451,6 +452,7 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                             ClearAutoComplete(CLI);
                         break;
                         case '4':   // End
+                        case 'F':   // XTerm End
                             for(;CLI->LineBuff[CLI->LineBuffInsertPos]!=0;
                                     CLI->LineBuffInsertPos++)
                             {
@@ -465,6 +467,8 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                                 }
                             }
                             ClearAutoComplete(CLI);
+                            if(c=='F')
+                                CLI->ESCPos=0;
                         break;
                         case '3':   // Del
                             l=STRLEN(CLI->LineBuff);
@@ -479,12 +483,15 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                             ClearAutoComplete(CLI);
                         break;
                         case '1':   // Home
+                        case 'H':   // XTerm Home
                             for(;CLI->LineBuffInsertPos>0;
                                     CLI->LineBuffInsertPos--)
                             {
                                 CLI_PUTCHAR('\b');
                             }
                             ClearAutoComplete(CLI);
+                            if(c=='H')
+                                CLI->ESCPos=0;
                         break;
                         case 'A':   // Up
                             if(CLI->HistoryBuff!=NULL)
@@ -603,9 +610,11 @@ char *CLI_GetLine(struct CLIHandle *Handle)
                     if(c=='~')
                         c=0;
                     CLI->ESCPos=0;
+                    c=0;
                 break;
                 default:
                     CLI->ESCPos=0;
+                    c=0;
                 break;
             }
         }
